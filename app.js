@@ -1,3 +1,5 @@
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEwEBFw-6VrfuhGXZ_7I89Cr_IY7YJKz1vNLs77j3xdtAk4JBWyDBz3sILxjJZbEUD/exec";
+
 const vehicleParts = [
     "Base de Tapa Valijera", "Capot", "Chasis Delantero", "Chasis Trasero", "Defensa Trasera",
     "Deflector de Radiador de Agua", "Electro -Ventilador de Aire Acondicionado", "Electro -Ventilador de Radiador",
@@ -12,8 +14,42 @@ const vehicleParts = [
     "Travesaño Interior", "Travesaño Superior", "Zócalo D.", "Zócalo I."
 ];
 
-let vehiclesDB = JSON.parse(localStorage.getItem('agp_vehicles')) || [];
-let trackingDB = JSON.parse(localStorage.getItem('agp_tracking')) || [];
+let vehiclesDB = [];
+let trackingDB = [];
+
+// Sincronizar datos con la nube de Google al iniciar
+async function cargarDatosNube() {
+    try {
+        const response = await fetch(SCRIPT_URL);
+        const data = await response.json();
+        vehiclesDB = data.vehicles || [];
+        trackingDB = data.tracking || [];
+        renderDashboard();
+        if (document.getElementById('view-tracking').classList.contains('active-view')) {
+            cargarSelectoresSeguimiento();
+            renderAvancesList();
+        }
+    } catch (error) {
+        console.error("Error al cargar de la nube:", error);
+        vehiclesDB = JSON.parse(localStorage.getItem('agp_vehicles')) || [];
+        trackingDB = JSON.parse(localStorage.getItem('agp_tracking')) || [];
+    }
+}
+
+async function guardarDatosNube() {
+    localStorage.setItem('agp_vehicles', JSON.stringify(vehiclesDB));
+    localStorage.setItem('agp_tracking', JSON.stringify(trackingDB));
+    try {
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'save', vehicles: vehiclesDB, tracking: trackingDB })
+        });
+    } catch (error) {
+        console.error("Error al guardar en la nube:", error);
+    }
+}
 
 function switchView(viewName) {
     document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active-view'));
@@ -51,7 +87,7 @@ function renderPartsSelector() {
     });
 }
 
-function guardarNuevoVehiculo(e) {
+async function guardarNuevoVehiculo(e) {
     e.preventDefault();
     const plate = document.getElementById('plate').value.trim().toUpperCase();
     const model = document.getElementById('model').value.trim();
@@ -61,15 +97,15 @@ function guardarNuevoVehiculo(e) {
     if (!plate || !model || !client) return;
 
     if(vehiclesDB.some(v => v.plate === plate)) {
-        alert("⚠️ Ya existe un vehículo registrado con esta chapa.");
+        alert("Ya existe un vehiculo registrado con esta chapa.");
         return;
     }
 
     vehiclesDB.push({ plate, model, client, status });
-    localStorage.setItem('agp_vehicles', JSON.stringify(vehiclesDB));
+    await guardarDatosNube();
     document.getElementById('vehicle-form').reset();
     renderDashboard();
-    alert("✅ Vehículo registrado correctamente.");
+    alert("Vehiculo registrado correctamente en la nube.");
 }
 
 function renderDashboard() {
@@ -84,13 +120,7 @@ function renderDashboard() {
         if (v.status === 'Listo') readyCount++;
         else processCount++;
 
-        const avs = trackingDB.filter(t => t.plate.toUpperCase() === v.plate.toUpperCase());
-        const ultimoEstado = avs.length > 0 ? avs[0].status : v.status;
-        const ultimaFoto = avs.length > 0 && avs[0].photo ? avs[0].photo : "";
-        const ultimoComentario = avs.length > 0 && avs[0].comment ? avs[0].comment : "Vehículo en proceso en el taller.";
-
-        // Incluimos los datos y la foto optimizada directo en el enlace
-        const linkCliente = `${baseUrl}?chapa=${encodeURIComponent(v.plate)}&estado=${encodeURIComponent(ultimoEstado)}&comentario=${encodeURIComponent(ultimoComentario)}&foto=${encodeURIComponent(ultimaFoto)}`;
+        const linkCliente = `${baseUrl}?chapa=${encodeURIComponent(v.plate)}`;
 
         tbody.innerHTML += `
             <tr>
@@ -101,8 +131,8 @@ function renderDashboard() {
                 <td>
                     <div style="display: flex; gap: 6px; align-items: center;">
                         <input type="text" readonly value="${linkCliente}" style="width: 180px; padding: 4px; background: #121212; border: 1px solid #444; color: #fff; font-size: 10px; border-radius: 4px;" id="table-link-${v.plate}">
-                        <button onclick="copiarEnlaceTabla('${v.plate}')" style="background: #27ae60; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">📋 Copiar</button>
-                        <button onclick="eliminarVehiculo(${idx})" style="background: #e74c3c; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">❌</button>
+                        <button onclick="copiarEnlaceTabla('${v.plate}')" style="background: #27ae60; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">Copiar</button>
+                        <button onclick="eliminarVehiculo(${idx})" style="background: #e74c3c; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">X</button>
                     </div>
                 </td>
             </tr>`;
@@ -117,13 +147,13 @@ function copiarEnlaceTabla(plate) {
     const input = document.getElementById(`table-link-${plate}`);
     input.select();
     navigator.clipboard.writeText(input.value);
-    alert("📋 ¡Enlace inteligente copiado! Ahora abrirá la foto en cualquier teléfono.");
+    alert("Enlace corto copiado. Al abrirlo el cliente vera sus fotos desde la nube.");
 }
 
-function eliminarVehiculo(index) {
-    if (confirm("¿Deseas eliminar este vehículo?")) {
+async function eliminarVehiculo(index) {
+    if (confirm("Deseas eliminar este vehiculo?")) {
         vehiclesDB.splice(index, 1);
-        localStorage.setItem('agp_vehicles', JSON.stringify(vehiclesDB));
+        await guardarDatosNube();
         renderDashboard();
     }
 }
@@ -133,11 +163,11 @@ function cargarSelectoresSeguimiento() {
     if (!select) return;
     select.innerHTML = '';
     if (vehiclesDB.length === 0) {
-        select.innerHTML = '<option value="">No hay vehículos registrados</option>';
+        select.innerHTML = '<option value="">No hay vehiculos registrados</option>';
         return;
     }
     vehiclesDB.forEach(v => {
-        select.innerHTML += `<option value="${v.plate}">${v.plate} — ${v.model} (${v.client})</option>`;
+        select.innerHTML += `<option value="${v.plate}">${v.plate} - ${v.model} (${v.client})</option>`;
     });
 }
 
@@ -153,7 +183,6 @@ function actualizarAvanceFoto(e) {
     const vIndex = vehiclesDB.findIndex(v => v.plate === plate);
     if (vIndex !== -1) {
         vehiclesDB[vIndex].status = status;
-        localStorage.setItem('agp_vehicles', JSON.stringify(vehiclesDB));
     }
 
     const today = new Date().toLocaleString('es-PY');
@@ -164,7 +193,7 @@ function actualizarAvanceFoto(e) {
             const img = new Image();
             img.onload = function () {
                 const canvas = document.createElement('canvas');
-                const MAX_SIZE = 300; // Tamaño súper optimizado para enlaces web
+                const MAX_SIZE = 400;
                 let width = img.width;
                 let height = img.height;
                 if (width > height) {
@@ -176,7 +205,7 @@ function actualizarAvanceFoto(e) {
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                const compressedPhoto = canvas.toDataURL('image/jpeg', 0.5);
+                const compressedPhoto = canvas.toDataURL('image/jpeg', 0.6);
                 guardarRegistroSeguimiento({ plate, status, comment, photo: compressedPhoto, date: today });
             };
             img.src = evt.target.result;
@@ -187,13 +216,13 @@ function actualizarAvanceFoto(e) {
     }
 }
 
-function guardarRegistroSeguimiento(registro) {
+async function guardarRegistroSeguimiento(registro) {
     trackingDB.unshift(registro);
-    localStorage.setItem('agp_tracking', JSON.stringify(trackingDB));
+    await guardarDatosNube();
     document.getElementById('tracking-form').reset();
     renderAvancesList();
     renderDashboard();
-    alert("📸 ¡Foto y avance guardados correctamente!");
+    alert("Avance y foto guardados en la nube de Google.");
 }
 
 function renderAvancesList() {
@@ -201,39 +230,39 @@ function renderAvancesList() {
     if (!container) return;
     container.innerHTML = '';
     if (trackingDB.length === 0) {
-        container.innerHTML = '<p style="color: #aaa;">No hay avances fotográficos registrados aún.</p>';
+        container.innerHTML = '<p style="color: #aaa;">No hay avances fotograficos registrados aun.</p>';
         return;
     }
     trackingDB.forEach((item, index) => {
         container.innerHTML += `
             <div class="tracking-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <strong style="color:#3498db; font-size:16px;">🚗 Chapa: ${item.plate}</strong>
+                    <strong style="color:#3498db; font-size:16px;">Chapa: ${item.plate}</strong>
                     <span style="font-size:11px; color:#aaa;">${item.date}</span>
                 </div>
                 <p style="margin: 4px 0;"><strong>Estado:</strong> <span class="badge info">${item.status}</span></p>
                 ${item.comment ? `<p style="margin: 6px 0; font-size: 13px; color: #ddd;"><em>"${item.comment}"</em></p>` : ''}
                 ${item.photo ? `<img src="${item.photo}" class="tracking-img" alt="Foto de avance">` : ''}
                 <div style="text-align:right; margin-top:8px;">
-                    <button onclick="eliminarAvance(${index})" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:12px;">🗑️ Eliminar</button>
+                    <button onclick="eliminarAvance(${index})" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:12px;">Eliminar</button>
                 </div>
             </div>`;
     });
 }
 
-function eliminarAvance(index) {
-    if (confirm("¿Deseas eliminar este registro?")) {
+async function eliminarAvance(index) {
+    if (confirm("Deseas eliminar este registro?")) {
         trackingDB.splice(index, 1);
-        localStorage.setItem('agp_tracking', JSON.stringify(trackingDB));
+        await guardarDatosNube();
         renderAvancesList();
         renderDashboard();
     }
 }
 
 function numberToWordsGuarani(amount) {
-    if (isNaN(amount) || amount <= 0) return "Cero Guaraníes";
+    if (isNaN(amount) || amount <= 0) return "Cero Guaranies";
     const units = ["", "un", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"];
-    const teens = ["diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve"];
+    const teens = ["diez", "once", "doce", "trece", "catorce", "quince", "dieciseis", "diecisiete", "dieciocho", "diecinueve"];
     const tens = ["", "diez", "veinte", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"];
     const hundreds = ["", "ciento", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecentos"];
 
@@ -253,10 +282,10 @@ function numberToWordsGuarani(amount) {
     }
 
     let num = Math.floor(amount), result = "";
-    if (num >= 1000000) { let m = Math.floor(num / 1000000); result += (m === 1 ? "un millón " : convertGroup(m) + " millones "); num %= 1000000; }
+    if (num >= 1000000) { let m = Math.floor(num / 1000000); result += (m === 1 ? "un millon " : convertGroup(m) + " millones "); num %= 1000000; }
     if (num >= 1000) { let th = Math.floor(num / 1000); result += (th === 1 ? "mil " : convertGroup(th) + " mil "); num %= 1000; }
     if (num > 0) result += convertGroup(num);
-    return (result.trim() + " guaraníes").toUpperCase();
+    return (result.trim() + " guaranies").toUpperCase();
 }
 
 function generatePDF() {
@@ -290,7 +319,7 @@ function generatePDF() {
         document.getElementById('pdf-total-words').innerText = numberToWordsGuarani(totalNum);
     } else {
         document.getElementById('pdf-total').innerText = '₲ 0';
-        document.getElementById('pdf-total-words').innerText = 'CERO GUARANÍES';
+        document.getElementById('pdf-total-words').innerText = 'CERO GUARANIES';
     }
 
     const partsTableBody = document.getElementById('pdf-parts-table-body');
@@ -323,5 +352,5 @@ function generatePDF() {
 
 window.onload = () => {
     renderPartsSelector();
-    renderDashboard();
+    cargarDatosNube();
 };
