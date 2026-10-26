@@ -50,7 +50,7 @@ const vehicleParts = [
     "Zócalo I."
 ];
 
-// Almacenamiento local de vehículos y avances fotográficos (con el vehículo del cliente predeterminado para la nube)
+// Almacenamiento local de vehículos y avances fotográficos
 let vehiclesDB = JSON.parse(localStorage.getItem('agp_vehicles')) || [
     { plate: "AABY779", model: "Toyota Allion", client: "Gabriel Fleitas", status: "Chapería" },
     { plate: "ABC-1234", model: "Toyota Hilux", client: "Carlos Gómez", status: "Chapería" }
@@ -107,12 +107,18 @@ function renderPartsSelector() {
 // Guardar nuevo vehículo desde el Panel Principal
 function guardarNuevoVehiculo(e) {
     e.preventDefault();
-    const plate = document.getElementById('plate').value.trim();
+    const plate = document.getElementById('plate').value.trim().toUpperCase();
     const model = document.getElementById('model').value.trim();
     const client = document.getElementById('client').value.trim();
     const status = document.getElementById('status').value;
 
     if (!plate || !model || !client) return;
+
+    // Verificar si ya existe
+    if(vehiclesDB.some(v => v.plate === plate)) {
+        alert("⚠️ Ya existe un vehículo registrado con esta chapa.");
+        return;
+    }
 
     vehiclesDB.push({ plate, model, client, status });
     localStorage.setItem('agp_vehicles', JSON.stringify(vehiclesDB));
@@ -122,7 +128,7 @@ function guardarNuevoVehiculo(e) {
     alert("✅ Vehículo registrado correctamente.");
 }
 
-// Renderizar tabla y tarjetas del Panel Principal
+// Renderizar tabla y tarjetas del Panel Principal con botón de enlace único
 function renderDashboard() {
     const tbody = document.getElementById('vehicle-table-body');
     if (!tbody) return;
@@ -131,17 +137,29 @@ function renderDashboard() {
     let readyCount = 0;
     let processCount = 0;
 
+    // Determinar la URL base para el enlace del cliente (funciona en GitHub Pages o local)
+    const baseUrl = window.location.href.includes('github.io') 
+        ? window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1) + 'cliente.html' 
+        : 'file:///E:/TallerApp/cliente.html';
+
     vehiclesDB.forEach((v, idx) => {
         if (v.status === 'Listo') readyCount++;
         else processCount++;
 
+        const linkCliente = `${baseUrl}?chapa=${v.plate}`;
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><strong>${v.plate}</strong></td>
             <td>${v.model}</td>
             <td>${v.client}</td>
             <td><span class="badge ${v.status === 'Listo' ? 'info' : 'warning'}">${v.status}</span></td>
-            <td><button onclick="eliminarVehiculo(${idx})" style="background:#e74c3c; border:none; color:#fff; padding:4px 8px; border-radius:4px; cursor:pointer;">❌</button></td>
+            <td>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <input type="text" readonly value="${linkCliente}" style="width: 160px; padding: 4px; background: #121212; border: 1px solid #444; color: #fff; font-size: 10px; border-radius: 4px;" id="table-link-${v.plate}">
+                    <button onclick="copiarEnlaceTabla('${v.plate}')" style="background: #27ae60; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">📋 Copiar</button>
+                    <button onclick="eliminarVehiculo(${idx})" style="background: #e74c3c; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">❌</button>
+                </div>
+            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -149,6 +167,14 @@ function renderDashboard() {
     if (document.getElementById('dash-total')) document.getElementById('dash-total').innerText = vehiclesDB.length;
     if (document.getElementById('dash-process')) document.getElementById('dash-process').innerText = processCount;
     if (document.getElementById('dash-ready')) document.getElementById('dash-ready').innerText = readyCount;
+}
+
+function copiarEnlaceTabla(plate) {
+    const input = document.getElementById(`table-link-${plate}`);
+    input.select();
+    input.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(input.value);
+    alert("📋 ¡Enlace único copiado al portapapeles! Ya puedes enviarlo por WhatsApp al cliente.");
 }
 
 function eliminarVehiculo(index) {
@@ -207,7 +233,10 @@ function actualizarAvanceFoto(e) {
         };
         reader.readAsDataURL(fileInput.files[0]);
     } else {
-        guardarRegistroSeguimiento({ plate, status, comment, photo: null, date: today });
+        // Mantener foto anterior si ya existía para esta chapa
+        let existingTracking = trackingDB.find(t => t.plate === plate);
+        let photoAnterior = existingTracking ? existingTracking.photo : null;
+        guardarRegistroSeguimiento({ plate, status, comment, photo: photoAnterior, date: today });
     }
 }
 
@@ -217,7 +246,8 @@ function guardarRegistroSeguimiento(registro) {
 
     document.getElementById('tracking-form').reset();
     renderAvancesList();
-    alert("📸 ¡Avance y estado actualizados correctamente!");
+    renderDashboard();
+    alert("📸 ¡Avance y estado actualizados correctamente para el cliente!");
 }
 
 // Renderizar historial de fotos y estados de seguimiento
@@ -322,84 +352,4 @@ function generatePDF() {
     const vehicle = document.getElementById('b-vehicle').value;
     const plate = document.getElementById('b-plate').value;
     const insurance = document.getElementById('b-insurance').value;
-    const claim = document.getElementById('b-claim').value;
-    const detail = document.getElementById('b-detail').value;
-    const observations = document.getElementById('b-observations').value;
-    const parts = document.getElementById('b-parts').value;
-    const total = document.getElementById('b-total').value;
-
-    document.getElementById('pdf-client').innerText = client;
-    document.getElementById('pdf-vehicle').innerText = vehicle;
-    document.getElementById('pdf-plate').innerText = plate;
-    document.getElementById('pdf-insurance').innerText = insurance;
-    document.getElementById('pdf-claim').innerText = claim;
-    
-    const today = new Date();
-    document.getElementById('pdf-date').innerText = today.toLocaleDateString('es-PY');
-
-    const detailBox = document.getElementById('pdf-detail-box');
-    if (detail.trim() !== "") {
-        document.getElementById('pdf-detail').innerText = detail;
-        detailBox.style.display = 'block';
-    } else {
-        detailBox.style.display = 'none';
-    }
-
-    document.getElementById('pdf-observations').innerText = observations;
-    document.getElementById('pdf-parts').innerText = parts;
-
-    if (total) {
-        const totalNum = parseFloat(total);
-        document.getElementById('pdf-total').innerText = '₲ ' + totalNum.toLocaleString('es-PY');
-        document.getElementById('pdf-total-words').innerText = numberToWordsGuarani(totalNum);
-    } else {
-        document.getElementById('pdf-total').innerText = '₲ 0';
-        document.getElementById('pdf-total-words').innerText = 'CERO GUARANÍES';
-    }
-
-    const partsTableBody = document.getElementById('pdf-parts-table-body');
-    partsTableBody.innerHTML = '';
-
-    const selectedParts = {};
-    vehicleParts.forEach((part, index) => {
-        const ch = document.querySelector(`input[name="part_${index}_ch"]`)?.checked;
-        const p = document.querySelector(`input[name="part_${index}_p"]`)?.checked;
-        const e = document.querySelector(`input[name="part_${index}_e"]`)?.checked;
-
-        if (ch || p || e) {
-            selectedParts[part] = { ch, p, e };
-        }
-    });
-
-    for (const [partName, checks] of Object.entries(selectedParts)) {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td style="border: 1px solid #000; padding: 4px; color: #000 !important;">${partName}</td>
-            <td style="border: 1px solid #000; padding: 4px; text-align: center; color: #000 !important;">${checks.ch ? 'X' : ''}</td>
-            <td style="border: 1px solid #000; padding: 4px; text-align: center; color: #000 !important;">${checks.p ? 'X' : ''}</td>
-            <td style="border: 1px solid #000; padding: 4px; text-align: center; color: #000 !important;">${checks.e ? 'X' : ''}</td>
-        `;
-        partsTableBody.appendChild(row);
-    }
-
-    const element = document.getElementById('pdf-template');
-    element.style.display = 'block';
-
-    const opt = {
-        margin:       0.3,
-        filename:     `Presupuesto_${client || 'Asegurado'}_${plate || 'AGP'}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
-
-    html2pdf().set(opt).from(element).save().then(() => {
-        element.style.display = 'none';
-    });
-}
-
-// Inicialización
-window.onload = () => {
-    renderPartsSelector();
-    renderDashboard();
-};
+    const
