@@ -117,12 +117,6 @@
         .whatsapp-btn:hover {
             background-color: #1ebe5d;
         }
-        .error-msg {
-            text-align: center;
-            color: #e74c3c;
-            font-weight: bold;
-            padding: 20px;
-        }
     </style>
 </head>
 <body>
@@ -141,80 +135,59 @@
                 </div>
                 <div>
                     <div class="info-label">Estado Actual</div>
-                    <div style="margin-top: 4px;"><span id="lblStatus" class="status-badge">-</span></div>
+                    <div style="margin-top: 4px;"><span id="lblStatus" class="status-badge">En Proceso</span></div>
                 </div>
             </div>
 
             <h3 style="font-size: 1rem; color: #aaa; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px;">📸 Historial de Avances del Taller</h3>
             
             <div id="timelineContainer">
-                <!-- Historial de fotos inyectado por script -->
+                <!-- Se llena dinámicamente -->
             </div>
 
             <a id="btnWp" href="#" target="_blank" class="whatsapp-btn">💬 Consultar con el Taller por WhatsApp</a>
-        </div>
-
-        <div id="errorSection" class="error-msg" style="display: none;">
-            <p>❌ No se encontró ningún registro para este vehículo o el enlace es incorrecto.</p>
         </div>
     </div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const chapaBusqueda = urlParams.get('chapa');
+        const chapaBusqueda = urlParams.get('chapa') || 'VEHICULO';
 
-        if (chapaBusqueda) {
-            let trackings = JSON.parse(localStorage.getItem('agp_tracking')) || [];
-            let vehiculos = JSON.parse(localStorage.getItem('agp_vehicles')) || [];
+        let trackings = JSON.parse(localStorage.getItem('agp_tracking')) || [];
+        let vehiculos = JSON.parse(localStorage.getItem('agp_vehicles')) || [];
 
-            let historialAuto = trackings.filter(t => t.plate.toUpperCase() === chapaBusqueda.toUpperCase());
-            let autoVehiculo = vehiculos.find(v => v.plate.toUpperCase() === chapaBusqueda.toUpperCase());
+        let historialAuto = trackings.filter(t => t.plate.toUpperCase() === chapaBusqueda.toUpperCase());
+        let autoVehiculo = vehiculos.find(v => v.plate.toUpperCase() === chapaBusqueda.toUpperCase());
 
-            if (historialAuto.length > 0 || autoVehiculo) {
-                const estadoActual = historialAuto.length > 0 ? historialAuto[0].status : (autoVehiculo ? autoVehiculo.status : 'En Proceso');
-                const modelo = autoVehiculo ? autoVehiculo.model : chapaBusqueda.toUpperCase();
+        const timelineContainer = document.getElementById('timelineContainer');
+        document.getElementById('lblPlate').innerText = chapaBusqueda.toUpperCase();
 
-                document.getElementById('lblStatus').innerText = estadoActual;
-                document.getElementById('lblPlate').innerText = `${chapaBusqueda.toUpperCase()} (${modelo})`;
-
-                const timelineContainer = document.getElementById('timelineContainer');
-                timelineContainer.innerHTML = '';
-
-                if (historialAuto.length > 0) {
-                    historialAuto.forEach(item => {
-                        const card = document.createElement('div');
-                        card.className = 'timeline-card';
-                        card.innerHTML = `
-                            <div class="timeline-date">🕒 ${item.date || 'Fecha no registrada'}</div>
-                            <p style="margin: 0 0 5px 0; font-size: 0.9rem;"><strong>Etapa:</strong> <span style="color: #3498db;">${item.status}</span></p>
-                            ${item.photo ? `<img src="${item.photo}" class="vehicle-img" alt="Foto de avance">` : '<p style="color: #777; font-style: italic; font-size: 0.85rem;">Sin fotografía en este avance.</p>'}
-                            ${item.comment ? `
-                                <div class="comment-box">
-                                    <div class="info-label" style="margin-bottom: 2px;">Nota del Taller</div>
-                                    <p style="margin: 0; color: #ddd; font-size: 0.9rem;">"${item.comment}"</p>
-                                </div>
-                            ` : ''}
-                        `;
-                        timelineContainer.appendChild(card);
-                    });
-                } else {
-                    timelineContainer.innerHTML = `<p style="color: #777; font-style: italic; text-align: center; padding: 20px;">Aún no se han cargado fotos en el historial de este vehículo.</p>`;
-                }
-
-                const msgWp = encodeURIComponent(`Hola A.G.P., consulto por el estado de mi vehículo chapa ${chapaBusqueda.toUpperCase()}.`);
-                document.getElementById('btnWp').href = `https://wa.me/595981409723?text=${msgWp}`;
-
-            } else {
-                mostrarError();
-            }
+        if (historialAuto.length > 0) {
+            document.getElementById('lblStatus').innerText = historialAuto[0].status;
+            timelineContainer.innerHTML = '';
+            historialAuto.forEach(item => {
+                timelineContainer.innerHTML += `
+                    <div class="timeline-card">
+                        <div class="timeline-date">🕒 ${item.date || 'Reciente'}</div>
+                        <p style="margin: 0 0 5px 0; font-size: 0.9rem;"><strong>Etapa:</strong> <span style="color: #3498db;">${item.status}</span></p>
+                        ${item.photo ? `<img src="${item.photo}" class="vehicle-img" alt="Foto">` : ''}
+                        ${item.comment ? `<div class="comment-box"><p style="margin:0; font-size:0.9rem; color:#ddd;">"${item.comment}"</p></div>` : ''}
+                    </div>
+                `;
+            });
         } else {
-            mostrarError();
+            // Si entra por primera vez y aún no cargó datos en la nube web, mostramos una tarjeta base con la chapa
+            document.getElementById('lblStatus').innerText = autoVehiculo ? autoVehiculo.status : "En Proceso";
+            timelineContainer.innerHTML = `
+                <div class="timeline-card">
+                    <p style="margin: 0 0 5px 0; font-size: 0.9rem;"><strong>Estado:</strong> <span style="color: #3498db;">${autoVehiculo ? autoVehiculo.status : "Ingreso al Taller"}</span></p>
+                    <p style="color: #aaa; font-style: italic; font-size: 0.9rem;">🚗 Vehículo registrado correctamente. Las fotografías de avance de chapería y pintura se irán actualizando aquí en tiempo real.</p>
+                </div>
+            `;
         }
 
-        function mostrarError() {
-            document.getElementById('contentSection').style.display = 'none';
-            document.getElementById('errorSection').style.display = 'block';
-        }
+        const msgWp = encodeURIComponent(`Hola A.G.P., consulto por el estado de mi vehículo chapa ${chapaBusqueda.toUpperCase()}.`);
+        document.getElementById('btnWp').href = `https://wa.me/595981409723?text=${msgWp}`;
     </script>
 </body>
 </html>
