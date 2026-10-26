@@ -27,7 +27,7 @@
         }
         header {
             text-align: center;
-            border-bottom: 2px solid #d9381e;
+            border-bottom: 2px solid #3498db;
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
@@ -37,7 +37,7 @@
             color: #fff;
         }
         header h1 span {
-            color: #d9381e;
+            color: #3498db;
         }
         header p {
             color: #aaa;
@@ -61,9 +61,9 @@
         }
         .status-badge {
             display: inline-block;
-            background: rgba(217, 56, 30, 0.2);
-            color: #d9381e;
-            border: 1px solid #d9381e;
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+            border: 1px solid #3498db;
             padding: 6px 15px;
             border-radius: 20px;
             font-weight: bold;
@@ -82,7 +82,7 @@
             background: #252525;
             padding: 12px;
             border-radius: 8px;
-            border-left: 4px solid #d9381e;
+            border-left: 4px solid #3498db;
             margin-bottom: 20px;
         }
         .whatsapp-btn {
@@ -122,18 +122,9 @@
 
             <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
                 <div class="info-group">
-                    <div class="info-label">Vehículo</div>
-                    <div class="info-value" id="lblVehicle">-</div>
+                    <div class="info-label">Vehículo / Chapa</div>
+                    <div class="info-value" id="lblPlate" style="color: #3498db;">-</div>
                 </div>
-                <div class="info-group" style="text-align: right;">
-                    <div class="info-label">Chapa / Patente</div>
-                    <div class="info-value" id="lblPlate" style="color: #d9381e;">-</div>
-                </div>
-            </div>
-
-            <div class="info-group" style="margin-bottom: 15px;">
-                <div class="info-label">Propietario / Asegurado</div>
-                <div class="info-value" id="lblClient">-</div>
             </div>
 
             <div id="imgContainer" style="text-align: center;">
@@ -154,31 +145,37 @@
     </div>
 
     <script>
-        // Leer la chapa desde la URL (ej: cliente.html?chapa=ABC123)
+        // Leer la chapa desde la URL (ej: cliente.html?chapa=AAEP619)
         const urlParams = new URLSearchParams(window.location.search);
         const chapaBusqueda = urlParams.get('chapa');
 
         if (chapaBusqueda) {
-            // Buscamos en el localStorage que se alimenta desde el panel del taller
-            let trackings = JSON.parse(localStorage.getItem('agp_trackings')) || [];
-            let auto = trackings.find(t => t.plate.toUpperCase() === chapaBusqueda.toUpperCase());
+            // Buscamos en agp_tracking y también en agp_vehicles para asegurar coincidencia
+            let trackings = JSON.parse(localStorage.getItem('agp_tracking')) || [];
+            let vehiculos = JSON.parse(localStorage.getItem('agp_vehicles')) || [];
 
-            if (auto) {
-                document.getElementById('lblStatus').innerText = auto.status;
-                document.getElementById('lblVehicle').innerText = auto.model;
-                document.getElementById('lblPlate').innerText = auto.plate.toUpperCase();
-                document.getElementById('lblClient').innerText = auto.client;
-                document.getElementById('lblComment').innerText = auto.comment || "Trabajos en curso según cronograma.";
+            let autoTracking = trackings.find(t => t.plate.toUpperCase() === chapaBusqueda.toUpperCase());
+            let autoVehiculo = vehiculos.find(v => v.plate.toUpperCase() === chapaBusqueda.toUpperCase());
+
+            if (autoTracking || autoVehiculo) {
+                const estado = autoTracking ? autoTracking.status : (autoVehiculo ? autoVehiculo.status : 'En Proceso');
+                const modelo = autoVehiculo ? autoVehiculo.model : chapaBusqueda.toUpperCase();
+                const comentario = autoTracking ? autoTracking.comment : "Vehículo registrado en el taller.";
+                const foto = autoTracking ? autoTracking.photo : null;
+
+                document.getElementById('lblStatus').innerText = estado;
+                document.getElementById('lblPlate').innerText = chapaBusqueda.toUpperCase() + (autoVehiculo ? ` (${autoVehiculo.model})` : '');
+                document.getElementById('lblComment').innerText = comentario || "Trabajos en curso según cronograma.";
 
                 const imgContainer = document.getElementById('imgContainer');
-                if (auto.photo) {
-                    imgContainer.innerHTML = `<img src="${auto.photo}" class="vehicle-img" alt="Foto del vehículo en taller">`;
+                if (foto) {
+                    imgContainer.innerHTML = `<img src="${foto}" class="vehicle-img" alt="Foto del vehículo en taller">`;
                 } else {
                     imgContainer.innerHTML = `<p style="color: #777; font-style: italic; margin-bottom: 15px;">Fotografía pendiente de actualización.</p>`;
                 }
 
                 // Enlace directo a WhatsApp del taller
-                const msgWp = encodeURIComponent(`Hola A.G.P., consulto por el estado de mi vehículo chapa ${auto.plate.toUpperCase()} (${auto.model}).`);
+                const msgWp = encodeURIComponent(`Hola A.G.P., consulto por el estado de mi vehículo chapa ${chapaBusqueda.toUpperCase()}.`);
                 document.getElementById('btnWp').href = `https://wa.me/595981409723?text=${msgWp}`;
 
             } else {
