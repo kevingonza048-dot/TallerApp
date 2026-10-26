@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguimiento de Vehículo - A.G.P. Chapería y Pintura</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #fff;
+            margin: 0;
+            padding: 15px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+        h2 {
+            color: #3498db;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            background: #252525;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+        }
+        .info-box p {
+            margin: 6px 0;
+            font-size: 14px;
+        }
+        .tracking-card {
+            background: #252525;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .badge {
+            background: #f39c12;
+            color: #000;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .tracking-img {
+            width: 100%;
+            max-height: 250px;
+            border-radius: 6px;
+            margin-top: 10px;
+            object-fit: cover;
+        }
+        .no-data {
+            text-align: center;
+            color: #aaa;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>A.G.P. Chapería y Pintura</h2>
+        <div class="subtitle">Portal de Seguimiento en Línea</div>
+
+        <div class="info-box" id="client-info">
+            <p><strong>Vehículo:</strong> <span id="c-model">Cargando...</span></p>
+            <p><strong>Asegurado:</strong> <span id="c-client">Cargando...</span></p>
+            <p><strong>Chapa Nº:</strong> <span id="c-plate">Cargando...</span></p>
+            <p><strong>Estado Actual:</strong> <span id="c-status" class="badge">Cargando...</span></p>
+        </div>
+
+        <h3 style="color: #27ae60; border-bottom: 1px solid #333; padding-bottom: 8px;">Historial de Avances</h3>
+        <div id="c-tracking-list">
+            <p class="no-data">Buscando información del vehículo...</p>
+        </div>
+    </div>
+
+    <script>
+        // Obtener la chapa desde el enlace (Ej: cliente.html?chapa=AABY779)
+        const urlParams = new URLSearchParams(window.location.search);
+        const chapaBusqueda = urlParams.get('chapa');
+
+        // Base de datos de respaldo configurada para la nube con el estado actualizado
+        const vehiclesDB = JSON.parse(localStorage.getItem('agp_vehicles')) || [
+            { plate: "AABY779", model: "Toyota Allion", client: "Gabriel Fleitas", status: "Pulido" },
+            { plate: "ABC-1234", model: "Toyota Hilux", client: "Carlos Gómez", status: "Chapería" }
+        ];
+        
+        const trackingDB = JSON.parse(localStorage.getItem('agp_tracking')) || [
+            { 
+                plate: "AABY779", 
+                status: "Pulido", 
+                comment: "PULIDO EN PROCESO", 
+                photo: "", // Puedes colocar aquí el enlace de la imagen o dejarlo vacío
+                date: "26/10/2026" 
+            },
+            { 
+                plate: "AABY779", 
+                status: "Chapería", 
+                comment: "Trabajo de chapería y enderezado en proceso en el taller.", 
+                photo: "", 
+                date: "26/10/2026" 
+            }
+        ];
+
+        const vehiculo = vehiclesDB.find(v => v.plate === chapaBusqueda);
+
+        if (vehiculo) {
+            document.getElementById('c-model').innerText = vehiculo.model;
+            document.getElementById('c-client').innerText = vehiculo.client;
+            document.getElementById('c-plate').innerText = vehiculo.plate;
+            document.getElementById('c-status').innerText = vehiculo.status;
+
+            // Filtrar avances de esta chapa específica
+            const avancesVehiculo = trackingDB.filter(t => t.plate === chapaBusqueda);
+            const container = document.getElementById('c-tracking-list');
+            container.innerHTML = '';
+
+            if (avancesVehiculo.length === 0) {
+                container.innerHTML = '<p class="no-data">El vehículo se encuentra registrado, pero aún no tiene fotos de avance cargadas.</p>';
+            } else {
+                avancesVehiculo.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'tracking-card';
+                    card.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span class="badge">${item.status}</span>
+                            <span style="font-size:11px; color:#aaa;">${item.date}</span>
+                        </div>
+                        ${item.comment ? `<p style="margin: 6px 0; font-size: 14px; color: #ddd;"><em>"${item.comment}"</em></p>` : ''}
+                        ${item.photo ? `<img src="${item.photo}" class="tracking-img" alt="Foto de avance">` : ''}
+                    `;
+                    container.appendChild(card);
+                });
+            }
+        } else {
+            document.getElementById('client-info').innerHTML = '<p style="color:#e74c3c; text-align:center;">No se encontró ningún vehículo registrado con esta chapa o el enlace es incorrecto.</p>';
+            document.getElementById('c-tracking-list').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
