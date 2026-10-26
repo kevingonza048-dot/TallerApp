@@ -153,14 +153,15 @@
         const urlParams = new URLSearchParams(window.location.search);
         const chapaBusqueda = urlParams.get('chapa') || 'VEHICULO';
 
+        document.getElementById('lblPlate').innerText = chapaBusqueda.toUpperCase();
+
         let trackings = JSON.parse(localStorage.getItem('agp_tracking')) || [];
         let vehiculos = JSON.parse(localStorage.getItem('agp_vehicles')) || [];
 
-        let historialAuto = trackings.filter(t => t.plate.toUpperCase() === chapaBusqueda.toUpperCase());
-        let autoVehiculo = vehiculos.find(v => v.plate.toUpperCase() === chapaBusqueda.toUpperCase());
+        let historialAuto = trackings.filter(t => t.plate && t.plate.toUpperCase() === chapaBusqueda.toUpperCase());
+        let autoVehiculo = vehiculos.find(v => v.plate && v.plate.toUpperCase() === chapaBusqueda.toUpperCase());
 
         const timelineContainer = document.getElementById('timelineContainer');
-        document.getElementById('lblPlate').innerText = chapaBusqueda.toUpperCase();
 
         if (historialAuto.length > 0) {
             document.getElementById('lblStatus').innerText = historialAuto[0].status;
@@ -176,12 +177,11 @@
                 `;
             });
         } else {
-            // Si entra por primera vez y aún no cargó datos en la nube web, mostramos una tarjeta base con la chapa
             document.getElementById('lblStatus').innerText = autoVehiculo ? autoVehiculo.status : "En Proceso";
             timelineContainer.innerHTML = `
                 <div class="timeline-card">
                     <p style="margin: 0 0 5px 0; font-size: 0.9rem;"><strong>Estado:</strong> <span style="color: #3498db;">${autoVehiculo ? autoVehiculo.status : "Ingreso al Taller"}</span></p>
-                    <p style="color: #aaa; font-style: italic; font-size: 0.9rem;">🚗 Vehículo registrado correctamente. Las fotografías de avance de chapería y pintura se irán actualizando aquí en tiempo real.</p>
+                    <p style="color: #aaa; font-style: italic; font-size: 0.9rem;">🚗 Vehículo registrado correctamente. Las fotos y actualizaciones del taller se mostrarán aquí en tiempo real.</p>
                 </div>
             `;
         }
