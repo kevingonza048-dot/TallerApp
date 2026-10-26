@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión Taller - Chapería y Pintura</title>
+    <title>Gestión Taller - A.G.P. Chapería y Pintura</title>
     <link rel="stylesheet" href="styles.css">
     <!-- Librería para la generación de PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -40,7 +40,6 @@
         .view-section.active-view {
             display: block;
         }
-        /* Estilos para tarjetas de seguimiento */
         .tracking-card {
             background: #1e1e1e;
             border: 1px solid #333;
@@ -59,12 +58,12 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Menú Lateral Interactivo -->
+        <!-- Menú Lateral Interactivo (Privado Taller) -->
         <aside class="sidebar">
-            <h2>🚗 TallerPro</h2>
+            <h2>🚗 A.G.P. Admin</h2>
             <ul>
                 <li><a href="#" id="menu-home" class="active" onclick="switchView('home')">📊 Panel Principal</a></li>
-                <li><a href="#" id="menu-tracking" onclick="switchView('tracking')">📸 Seguimiento de Fotos</a></li>
+                <li><a href="#" id="menu-tracking" onclick="switchView('tracking')">📸 Seguimiento y Enlaces</a></li>
                 <li><a href="#" id="menu-budget" onclick="switchView('budget')">📝 Presupuestos</a></li>
                 <li><a href="#" onclick="alert('Sección Inventario en desarrollo');">📦 Inventario</a></li>
             </ul>
@@ -77,7 +76,7 @@
             <div id="view-home" class="view-section active-view">
                 <header>
                     <h1>Recepción y Estado del Taller</h1>
-                    <p>Sistema de gestión profesional para chapería y pintura</p>
+                    <p>Panel de control interno — A.G.P. Chapería y Pintura</p>
                 </header>
 
                 <section class="dashboard-cards">
@@ -101,8 +100,8 @@
                     <div class="form-card" style="background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #333;">
                         <h3 style="margin-bottom: 15px; color: #3498db;">➕ Registrar Nuevo Vehículo</h3>
                         <form id="vehicle-form" onsubmit="guardarNuevoVehiculo(event)" style="display: flex; gap: 15px; flex-wrap: wrap;">
-                            <input type="text" id="plate" placeholder="Placa / Patente (Ej: ABC-1234)" required style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-                            <input type="text" id="model" placeholder="Vehículo (Ej: Toyota Hilux)" required style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
+                            <input type="text" id="plate" placeholder="Placa / Patente (Ej: ABC123)" required style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px; text-transform: uppercase;">
+                            <input type="text" id="model" placeholder="Vehículo (Ej: Toyota Vitz)" required style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
                             <input type="text" id="client" placeholder="Nombre del Asegurado" required style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
                             <select id="status" style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
                                 <option value="Ingreso">1. Ingreso</option>
@@ -131,17 +130,17 @@
                 </section>
             </div>
 
-            <!-- VISTA 2: SEGUIMIENTO FOTOGRÁFICO Y ESTADOS -->
+            <!-- VISTA 2: SEGUIMIENTO FOTOGRÁFICO Y GENERADOR DE ENLACES ÚNICOS -->
             <div id="view-tracking" class="view-section">
                 <header>
-                    <h1>📸 Seguimiento Fotográfico de Vehículos</h1>
-                    <p>Actualiza el estado y sube fotos del avance para consulta de los clientes</p>
+                    <h1>📸 Seguimiento Fotográfico y Enlaces de Clientes</h1>
+                    <p>Sube la foto descargada de WhatsApp y obtén el enlace único para el cliente</p>
                 </header>
 
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                     <!-- Formulario de actualización de estado y foto -->
                     <div style="flex: 1; min-width: 300px; background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333;">
-                        <h3 style="color: #3498db; margin-bottom: 15px;">Actualizar Avance de Vehículo</h3>
+                        <h3 style="color: #3498db; margin-bottom: 15px;">Actualizar Avance y Foto</h3>
                         <form id="tracking-form" onsubmit="actualizarAvanceFoto(event)">
                             <label style="color: #aaa; font-size: 13px;">Seleccionar Vehículo:</label>
                             <select id="t-plate-select" required style="width: 100%; padding: 10px; margin-bottom: 15px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
@@ -156,21 +155,21 @@
                                 <option value="Listo">5. Listo para Entrega</option>
                             </select>
 
-                            <label style="color: #aaa; font-size: 13px;">Adjuntar Foto de Avance:</label>
-                            <input type="file" id="t-photo-input" accept="image/*" style="width: 100%; padding: 8px; margin-bottom: 15px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
+                            <label style="color: #aaa; font-size: 13px;">Adjuntar Foto de WhatsApp:</label>
+                            <input type="file" id="t-photo-input" accept="image/*" required style="width: 100%; padding: 8px; margin-bottom: 15px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
 
                             <label style="color: #aaa; font-size: 13px;">Comentario / Nota del trabajo:</label>
                             <textarea id="t-comment" rows="2" placeholder="Ej: Se completó la aplicación de masilla y primer..." style="width: 100%; padding: 10px; margin-bottom: 15px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;"></textarea>
 
                             <button type="submit" style="width: 100%; background: #3498db; color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">
-                                📸 Actualizar Avance y Foto
+                                💾 Guardar y Generar Enlace Único
                             </button>
                         </form>
                     </div>
 
-                    <!-- Lista de Avances Guardados -->
+                    <!-- Lista de Avances y Enlaces para copiar -->
                     <div style="flex: 1.5; min-width: 320px;">
-                        <h3 style="color: #27ae60; margin-bottom: 15px;">Historial de Avances</h3>
+                        <h3 style="color: #27ae60; margin-bottom: 15px;">Enlaces Únicos para Enviar por WhatsApp</h3>
                         <div id="tracking-list">
                             <p style="color: #aaa;">No hay registros de seguimiento cargados aún.</p>
                         </div>
@@ -178,7 +177,7 @@
                 </div>
             </div>
 
-            <!-- VISTA 3: SECCIÓN DE PRESUPUESTOS EXCLUSIVA -->
+            <!-- VISTA 3: SECCIÓN DE PRESUPUESTOS -->
             <div id="view-budget" class="view-section">
                 <section class="budget-section">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -198,7 +197,7 @@
                             
                             <input type="text" id="b-client" placeholder="Asegurado / Propietario" required style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
                             <input type="text" id="b-vehicle" placeholder="Vehículo / Modelo" required style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-                            <input type="text" id="b-plate" placeholder="Placa / Chapa" required style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
+                            <input type="text" id="b-plate" placeholder="Placa / Chapa" required style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px; text-transform: uppercase;">
                             
                             <input type="text" id="b-insurance" placeholder="Seguro" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
                             <input type="text" id="b-claim" placeholder="Nº de Siniestro" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
