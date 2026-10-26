@@ -74,7 +74,6 @@
             font-weight: bold;
             font-size: 0.85rem;
         }
-        /* Estilos para cada tarjeta del historial */
         .timeline-card {
             background: #252525;
             border: 1px solid #444;
@@ -149,7 +148,7 @@
             <h3 style="font-size: 1rem; color: #aaa; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px;">📸 Historial de Avances del Taller</h3>
             
             <div id="timelineContainer">
-                <!-- Aquí se inyectarán todas las fotos del historial -->
+                <!-- Historial de fotos inyectado por script -->
             </div>
 
             <a id="btnWp" href="#" target="_blank" class="whatsapp-btn">💬 Consultar con el Taller por WhatsApp</a>
@@ -161,7 +160,6 @@
     </div>
 
     <script>
-        // Leer la chapa desde la URL (ej: cliente.html?chapa=AAEP619)
         const urlParams = new URLSearchParams(window.location.search);
         const chapaBusqueda = urlParams.get('chapa');
 
@@ -169,7 +167,6 @@
             let trackings = JSON.parse(localStorage.getItem('agp_tracking')) || [];
             let vehiculos = JSON.parse(localStorage.getItem('agp_vehicles')) || [];
 
-            // Filtrar TODOS los registros que correspondan a esta chapa
             let historialAuto = trackings.filter(t => t.plate.toUpperCase() === chapaBusqueda.toUpperCase());
             let autoVehiculo = vehiculos.find(v => v.plate.toUpperCase() === chapaBusqueda.toUpperCase());
 
@@ -204,7 +201,6 @@
                     timelineContainer.innerHTML = `<p style="color: #777; font-style: italic; text-align: center; padding: 20px;">Aún no se han cargado fotos en el historial de este vehículo.</p>`;
                 }
 
-                // Enlace directo a WhatsApp del taller
                 const msgWp = encodeURIComponent(`Hola A.G.P., consulto por el estado de mi vehículo chapa ${chapaBusqueda.toUpperCase()}.`);
                 document.getElementById('btnWp').href = `https://wa.me/595981409723?text=${msgWp}`;
 
