@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historial del Vehículo - A.G.P. Chapería y Pintura</title>
+    <title>Historial del Vehiculo - A.G.P. Chaperia y Pintura</title>
     <style>
         body {
             background-color: #121212;
@@ -111,75 +111,82 @@
 
     <div class="container">
         <header>
-            <h1>A.G.P. <span>Chapería y Pintura</span></h1>
-            <p>Evolución y seguimiento fotográfico en línea</p>
+            <h1>A.G.P. <span>Chaperia y Pintura</span></h1>
+            <p>Evolucion y seguimiento fotografico en linea</p>
         </header>
 
         <div id="contentSection">
             <div class="info-header">
                 <div>
-                    <div class="info-label">Vehículo / Chapa</div>
+                    <div class="info-label">Vehiculo / Chapa</div>
                     <div class="info-value" id="lblPlate" style="color: #3498db; font-size: 1rem; font-weight: bold; margin-top: 2px;">-</div>
                 </div>
                 <div>
                     <div class="info-label">Estado Actual</div>
-                    <div style="margin-top: 4px;"><span id="lblStatus" class="status-badge">En Proceso</span></div>
+                    <div style="margin-top: 4px;"><span id="lblStatus" class="status-badge">Cargando...</span></div>
                 </div>
             </div>
 
-            <h3 style="font-size: 1rem; color: #aaa; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px;">📸 Historial de Avances del Taller</h3>
+            <h3 style="font-size: 1rem; color: #aaa; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px;">Historial de Avances del Taller</h3>
             
             <div id="timelineContainer">
-                <!-- Se llena automáticamente -->
+                <p style="color: #aaa; text-align:center;">Conectando con la nube del taller...</p>
             </div>
 
-            <a id="btnWp" href="#" target="_blank" class="whatsapp-btn">💬 Consultar con el Taller por WhatsApp</a>
+            <a id="btnWp" href="#" target="_blank" class="whatsapp-btn">Consultar con el Taller por WhatsApp</a>
         </div>
     </div>
 
     <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEwEBFw-6VrfuhGXZ_7I89Cr_IY7YJKz1vNLs77j3xdtAk4JBWyDBz3sILxjJZbEUD/exec";
+
         const urlParams = new URLSearchParams(window.location.search);
-        const chapaBusqueda = urlParams.get('chapa') || 'VEHICULO';
+        const chapaBusqueda = urlParams.get('chapa') || '';
 
-        document.getElementById('lblPlate').innerText = chapaBusqueda.toUpperCase();
+        document.getElementById('lblPlate').innerText = chapaBusqueda ? chapaBusqueda.toUpperCase() : 'VEHICULO';
 
-        // Para evitar que en los teléfonos de los clientes aparezca vacío, 
-        // incluimos un sistema de respaldo inteligente que simula los datos si la nube local está vacía.
-        let trackings = JSON.parse(localStorage.getItem('agp_tracking')) || [];
-        let vehiculos = JSON.parse(localStorage.getItem('agp_vehicles')) || [];
+        const msgWp = encodeURIComponent(`Hola A.G.P., consulto por el estado de mi vehiculo chapa ${chapaBusqueda.toUpperCase()}.`);
+        document.getElementById('btnWp').href = `https://wa.me/595981409723?text=${msgWp}`;
 
-        let historialAuto = trackings.filter(t => t.plate && t.plate.toUpperCase() === chapaBusqueda.toUpperCase());
-        let autoVehiculo = vehiculos.find(v => v.plate && v.plate.toUpperCase() === chapaBusqueda.toUpperCase());
+        async function cargarHistorialCliente() {
+            const timelineContainer = document.getElementById('timelineContainer');
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const data = await response.json();
+                const trackings = data.tracking || [];
+                const vehiculos = data.vehicles || [];
 
-        const timelineContainer = document.getElementById('timelineContainer');
+                let historialAuto = trackings.filter(t => t.plate && t.plate.toUpperCase() === chapaBusqueda.toUpperCase());
+                let autoVehiculo = vehiculos.find(v => v.plate && v.plate.toUpperCase() === chapaBusqueda.toUpperCase());
 
-        if (historialAuto.length > 0) {
-            document.getElementById('lblStatus').innerText = historialAuto[0].status;
-            timelineContainer.innerHTML = '';
-            historialAuto.forEach(item => {
-                timelineContainer.innerHTML += `
-                    <div class="timeline-card">
-                        <div style="font-size: 0.75rem; color: #aaa; margin-bottom: 8px; text-align: right;">🕒 ${item.date || 'Reciente'}</div>
-                        <p style="margin: 0 0 5px 0; font-size: 0.9rem;"><strong>Etapa:</strong> <span style="color: #3498db;">${item.status}</span></p>
-                        ${item.photo ? `<img src="${item.photo}" class="vehicle-img" alt="Foto de avance">` : ''}
-                        ${item.comment ? `<div class="comment-box"><p style="margin:0; font-size:0.9rem; color:#ddd;">"${item.comment}"</p></div>` : ''}
-                    </div>
-                `;
-            });
-        } else {
-            // Si el cliente entra desde su celular y la memoria local está en cero, 
-            // mostramos un mensaje predeterminado limpio y ordenado con su chapa
-            document.getElementById('lblStatus').innerText = autoVehiculo ? autoVehiculo.status : "En Proceso";
-            timelineContainer.innerHTML = `
-                <div class="timeline-card">
-                    <p style="margin: 0 0 5px 0; font-size: 0.9rem;"><strong>Estado:</strong> <span style="color: #3498db;">${autoVehiculo ? autoVehiculo.status : "Ingreso al Taller"}</span></p>
-                    <p style="color: #aaa; font-style: italic; font-size: 0.9rem;">🚗 Vehículo registrado en A.G.P. Chapería y Pintura. Las fotos y actualizaciones de avance se sincronizarán aquí en breve.</p>
-                </div>
-            `;
+                if (historialAuto.length > 0) {
+                    document.getElementById('lblStatus').innerText = historialAuto[0].status;
+                    timelineContainer.innerHTML = '';
+                    historialAuto.forEach(item => {
+                        timelineContainer.innerHTML += `
+                            <div class="timeline-card">
+                                <div style="font-size: 0.75rem; color: #aaa; margin-bottom: 8px; text-align: right;">${item.date || 'Reciente'}</div>
+                                <p style="margin: 0 0 5px 0; font-size: 0.9rem;"><strong>Etapa:</strong> <span style="color: #3498db;">${item.status}</span></p>
+                                ${item.photo ? `<img src="${item.photo}" class="vehicle-img" alt="Foto de avance">` : ''}
+                                ${item.comment ? `<div class="comment-box"><p style="margin:0; font-size:0.9rem; color:#ddd;">"${item.comment}"</p></div>` : ''}
+                            </div>
+                        `;
+                    });
+                } else {
+                    document.getElementById('lblStatus').innerText = autoVehiculo ? autoVehiculo.status : "En Proceso";
+                    timelineContainer.innerHTML = `
+                        <div class="timeline-card">
+                            <p style="margin: 0 0 5px 0; font-size: 0.9rem;"><strong>Estado:</strong> <span style="color: #3498db;">${autoVehiculo ? autoVehiculo.status : "Ingreso al Taller"}</span></p>
+                            <p style="color: #aaa; font-style: italic; font-size: 0.9rem;">Vehiculo registrado en A.G.P. Chaperia y Pintura. Las fotos y actualizaciones de avance se muestran aqui en tiempo real.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                timelineContainer.innerHTML = `<p style="color: #e74c3c; text-align:center;">Error al conectar con la nube del taller.</p>`;
+            }
         }
 
-        const msgWp = encodeURIComponent(`Hola A.G.P., consulto por el estado de mi vehículo chapa ${chapaBusqueda.toUpperCase()}.`);
-        document.getElementById('btnWp').href = `https://wa.me/595981409723?text=${msgWp}`;
+        cargarHistorialCliente();
     </script>
 </body>
 </html>
