@@ -3,153 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seguimiento de Vehículo - A.G.P. Chapería y Pintura</title>
+    <title>Estado de su Vehículo - A.G.P. Chapería y Pintura</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
             background-color: #121212;
-            color: #fff;
+            color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 15px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
         .container {
-            max-width: 600px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: 500px;
             background: #1e1e1e;
-            padding: 20px;
-            border-radius: 12px;
             border: 1px solid #333;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
         }
-        h2 {
-            color: #3498db;
+        header {
             text-align: center;
-            margin-bottom: 5px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #aaa;
-            font-size: 12px;
+            border-bottom: 2px solid #d9381e;
+            padding-bottom: 15px;
             margin-bottom: 20px;
         }
-        .info-box {
+        header h1 {
+            font-size: 1.5rem;
+            margin: 0 0 5px 0;
+            color: #fff;
+        }
+        header h1 span {
+            color: #d9381e;
+        }
+        header p {
+            color: #aaa;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+        .info-group {
+            margin-bottom: 15px;
+        }
+        .info-label {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        .info-value {
+            font-size: 1.1rem;
+            color: #fff;
+            font-weight: bold;
+            margin-top: 3px;
+        }
+        .status-badge {
+            display: inline-block;
+            background: rgba(217, 56, 30, 0.2);
+            color: #d9381e;
+            border: 1px solid #d9381e;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+        .vehicle-img {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #444;
+            margin-bottom: 15px;
+        }
+        .comment-box {
             background: #252525;
             padding: 12px;
             border-radius: 8px;
+            border-left: 4px solid #d9381e;
             margin-bottom: 20px;
-            border: 1px solid #444;
         }
-        .info-box p {
-            margin: 6px 0;
-            font-size: 14px;
-        }
-        .tracking-card {
-            background: #252525;
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        .badge {
-            background: #f39c12;
-            color: #000;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 12px;
-        }
-        .tracking-img {
-            width: 100%;
-            max-height: 250px;
-            border-radius: 6px;
-            margin-top: 10px;
-            object-fit: cover;
-        }
-        .no-data {
+        .whatsapp-btn {
+            display: block;
+            background-color: #25d366;
+            color: white;
             text-align: center;
-            color: #aaa;
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .whatsapp-btn:hover {
+            background-color: #1ebe5d;
+        }
+        .error-msg {
+            text-align: center;
+            color: #e74c3c;
+            font-weight: bold;
             padding: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>A.G.P. Chapería y Pintura</h2>
-        <div class="subtitle">Portal de Seguimiento en Línea</div>
 
-        <div class="info-box" id="client-info">
-            <p><strong>Vehículo:</strong> <span id="c-model">Cargando...</span></p>
-            <p><strong>Asegurado:</strong> <span id="c-client">Cargando...</span></p>
-            <p><strong>Chapa Nº:</strong> <span id="c-plate">Cargando...</span></p>
-            <p><strong>Estado Actual:</strong> <span id="c-status" class="badge">Cargando...</span></p>
+    <div class="container" id="mainCard">
+        <header>
+            <h1>A.G.P. <span>Chapería y Pintura</span></h1>
+            <p>Seguimiento en línea del estado de su vehículo</p>
+        </header>
+
+        <div id="contentSection">
+            <div style="text-align: center;">
+                <span id="lblStatus" class="status-badge">Cargando...</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                <div class="info-group">
+                    <div class="info-label">Vehículo</div>
+                    <div class="info-value" id="lblVehicle">-</div>
+                </div>
+                <div class="info-group" style="text-align: right;">
+                    <div class="info-label">Chapa / Patente</div>
+                    <div class="info-value" id="lblPlate" style="color: #d9381e;">-</div>
+                </div>
+            </div>
+
+            <div class="info-group" style="margin-bottom: 15px;">
+                <div class="info-label">Propietario / Asegurado</div>
+                <div class="info-value" id="lblClient">-</div>
+            </div>
+
+            <div id="imgContainer" style="text-align: center;">
+                <!-- Aquí se muestra la foto -->
+            </div>
+
+            <div class="comment-box">
+                <div class="info-label" style="margin-bottom: 4px;">Observaciones del Taller</div>
+                <p id="lblComment" style="margin: 0; color: #ddd; font-size: 0.95rem;">-</p>
+            </div>
+
+            <a id="btnWp" href="#" target="_blank" class="whatsapp-btn">💬 Consultar con el Taller por WhatsApp</a>
         </div>
 
-        <h3 style="color: #27ae60; border-bottom: 1px solid #333; padding-bottom: 8px;">Historial de Avances</h3>
-        <div id="c-tracking-list">
-            <p class="no-data">Buscando información del vehículo...</p>
+        <div id="errorSection" class="error-msg" style="display: none;">
+            <p>❌ No se encontró ningún registro para este vehículo o el enlace es incorrecto.</p>
         </div>
     </div>
 
     <script>
-        // Obtener la chapa desde el enlace (Ej: cliente.html?chapa=AABY779)
+        // Leer la chapa desde la URL (ej: cliente.html?chapa=ABC123)
         const urlParams = new URLSearchParams(window.location.search);
         const chapaBusqueda = urlParams.get('chapa');
 
-        // Base de datos de respaldo configurada para la nube con el estado actualizado
-        const vehiclesDB = JSON.parse(localStorage.getItem('agp_vehicles')) || [
-            { plate: "AABY779", model: "Toyota Allion", client: "Gabriel Fleitas", status: "Pulido" },
-            { plate: "ABC-1234", model: "Toyota Hilux", client: "Carlos Gómez", status: "Chapería" }
-        ];
-        
-        const trackingDB = JSON.parse(localStorage.getItem('agp_tracking')) || [
-            { 
-                plate: "AABY779", 
-                status: "Pulido", 
-                comment: "PULIDO EN PROCESO", 
-                photo: "", // Puedes colocar aquí el enlace de la imagen o dejarlo vacío
-                date: "26/10/2026" 
-            },
-            { 
-                plate: "AABY779", 
-                status: "Chapería", 
-                comment: "Trabajo de chapería y enderezado en proceso en el taller.", 
-                photo: "", 
-                date: "26/10/2026" 
-            }
-        ];
+        if (chapaBusqueda) {
+            // Buscamos en el localStorage que se alimenta desde el panel del taller
+            let trackings = JSON.parse(localStorage.getItem('agp_trackings')) || [];
+            let auto = trackings.find(t => t.plate.toUpperCase() === chapaBusqueda.toUpperCase());
 
-        const vehiculo = vehiclesDB.find(v => v.plate === chapaBusqueda);
+            if (auto) {
+                document.getElementById('lblStatus').innerText = auto.status;
+                document.getElementById('lblVehicle').innerText = auto.model;
+                document.getElementById('lblPlate').innerText = auto.plate.toUpperCase();
+                document.getElementById('lblClient').innerText = auto.client;
+                document.getElementById('lblComment').innerText = auto.comment || "Trabajos en curso según cronograma.";
 
-        if (vehiculo) {
-            document.getElementById('c-model').innerText = vehiculo.model;
-            document.getElementById('c-client').innerText = vehiculo.client;
-            document.getElementById('c-plate').innerText = vehiculo.plate;
-            document.getElementById('c-status').innerText = vehiculo.status;
+                const imgContainer = document.getElementById('imgContainer');
+                if (auto.photo) {
+                    imgContainer.innerHTML = `<img src="${auto.photo}" class="vehicle-img" alt="Foto del vehículo en taller">`;
+                } else {
+                    imgContainer.innerHTML = `<p style="color: #777; font-style: italic; margin-bottom: 15px;">Fotografía pendiente de actualización.</p>`;
+                }
 
-            // Filtrar avances de esta chapa específica
-            const avancesVehiculo = trackingDB.filter(t => t.plate === chapaBusqueda);
-            const container = document.getElementById('c-tracking-list');
-            container.innerHTML = '';
+                // Enlace directo a WhatsApp del taller
+                const msgWp = encodeURIComponent(`Hola A.G.P., consulto por el estado de mi vehículo chapa ${auto.plate.toUpperCase()} (${auto.model}).`);
+                document.getElementById('btnWp').href = `https://wa.me/595981409723?text=${msgWp}`;
 
-            if (avancesVehiculo.length === 0) {
-                container.innerHTML = '<p class="no-data">El vehículo se encuentra registrado, pero aún no tiene fotos de avance cargadas.</p>';
             } else {
-                avancesVehiculo.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'tracking-card';
-                    card.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span class="badge">${item.status}</span>
-                            <span style="font-size:11px; color:#aaa;">${item.date}</span>
-                        </div>
-                        ${item.comment ? `<p style="margin: 6px 0; font-size: 14px; color: #ddd;"><em>"${item.comment}"</em></p>` : ''}
-                        ${item.photo ? `<img src="${item.photo}" class="tracking-img" alt="Foto de avance">` : ''}
-                    `;
-                    container.appendChild(card);
-                });
+                mostrarError();
             }
         } else {
-            document.getElementById('client-info').innerHTML = '<p style="color:#e74c3c; text-align:center;">No se encontró ningún vehículo registrado con esta chapa o el enlace es incorrecto.</p>';
-            document.getElementById('c-tracking-list').innerHTML = '';
+            mostrarError();
+        }
+
+        function mostrarError() {
+            document.getElementById('contentSection').style.display = 'none';
+            document.getElementById('errorSection').style.display = 'block';
         }
     </script>
 </body>
