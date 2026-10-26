@@ -1,4 +1,4 @@
-// Tu lista personalizada de piezas (respetando exactamente lo que eliminaste y ordenado)
+// Tu lista personalizada de piezas
 const vehicleParts = [
     "Base de Tapa Valijera",
     "Capot",
@@ -114,7 +114,6 @@ function guardarNuevoVehiculo(e) {
 
     if (!plate || !model || !client) return;
 
-    // Verificar si ya existe
     if(vehiclesDB.some(v => v.plate === plate)) {
         alert("⚠️ Ya existe un vehículo registrado con esta chapa.");
         return;
@@ -137,7 +136,6 @@ function renderDashboard() {
     let readyCount = 0;
     let processCount = 0;
 
-    // Determinar la URL base para el enlace del cliente (funciona en GitHub Pages o local)
     const baseUrl = window.location.href.includes('github.io') 
         ? window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1) + 'cliente.html' 
         : 'file:///E:/TallerApp/cliente.html';
@@ -233,7 +231,6 @@ function actualizarAvanceFoto(e) {
         };
         reader.readAsDataURL(fileInput.files[0]);
     } else {
-        // Mantener foto anterior si ya existía para esta chapa
         let existingTracking = trackingDB.find(t => t.plate === plate);
         let photoAnterior = existingTracking ? existingTracking.photo : null;
         guardarRegistroSeguimiento({ plate, status, comment, photo: photoAnterior, date: today });
@@ -352,4 +349,84 @@ function generatePDF() {
     const vehicle = document.getElementById('b-vehicle').value;
     const plate = document.getElementById('b-plate').value;
     const insurance = document.getElementById('b-insurance').value;
-    const
+    const claim = document.getElementById('b-claim').value;
+    const detail = document.getElementById('b-detail').value;
+    const observations = document.getElementById('b-observations').value;
+    const parts = document.getElementById('b-parts').value;
+    const total = document.getElementById('b-total').value;
+
+    document.getElementById('pdf-client').innerText = client;
+    document.getElementById('pdf-vehicle').innerText = vehicle;
+    document.getElementById('pdf-plate').innerText = plate;
+    document.getElementById('pdf-insurance').innerText = insurance;
+    document.getElementById('pdf-claim').innerText = claim;
+    
+    const today = new Date();
+    document.getElementById('pdf-date').innerText = today.toLocaleDateString('es-PY');
+
+    const detailBox = document.getElementById('pdf-detail-box');
+    if (detail.trim() !== "") {
+        document.getElementById('pdf-detail').innerText = detail;
+        detailBox.style.display = 'block';
+    } else {
+        detailBox.style.display = 'none';
+    }
+
+    document.getElementById('pdf-observations').innerText = observations;
+    document.getElementById('pdf-parts').innerText = parts;
+
+    if (total) {
+        const totalNum = parseFloat(total);
+        document.getElementById('pdf-total').innerText = '₲ ' + totalNum.toLocaleString('es-PY');
+        document.getElementById('pdf-total-words').innerText = numberToWordsGuarani(totalNum);
+    } else {
+        document.getElementById('pdf-total').innerText = '₲ 0';
+        document.getElementById('pdf-total-words').innerText = 'CERO GUARANÍES';
+    }
+
+    const partsTableBody = document.getElementById('pdf-parts-table-body');
+    partsTableBody.innerHTML = '';
+
+    const selectedParts = {};
+    vehicleParts.forEach((part, index) => {
+        const ch = document.querySelector(`input[name="part_${index}_ch"]`)?.checked;
+        const p = document.querySelector(`input[name="part_${index}_p"]`)?.checked;
+        const e = document.querySelector(`input[name="part_${index}_e"]`)?.checked;
+
+        if (ch || p || e) {
+            selectedParts[part] = { ch, p, e };
+        }
+    });
+
+    for (const [partName, checks] of Object.entries(selectedParts)) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td style="border: 1px solid #000; padding: 4px; color: #000 !important;">${partName}</td>
+            <td style="border: 1px solid #000; padding: 4px; text-align: center; color: #000 !important;">${checks.ch ? 'X' : ''}</td>
+            <td style="border: 1px solid #000; padding: 4px; text-align: center; color: #000 !important;">${checks.p ? 'X' : ''}</td>
+            <td style="border: 1px solid #000; padding: 4px; text-align: center; color: #000 !important;">${checks.e ? 'X' : ''}</td>
+        `;
+        partsTableBody.appendChild(row);
+    }
+
+    const element = document.getElementById('pdf-template');
+    element.style.display = 'block';
+
+    const opt = {
+        margin:    0.3,
+        filename:  `Presupuesto_${client || 'Asegurado'}_${plate || 'AGP'}.pdf`,
+        image:     { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:     { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+        element.style.display = 'none';
+    });
+}
+
+// Inicialización
+window.onload = () => {
+    renderPartsSelector();
+    renderDashboard();
+};
