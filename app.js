@@ -137,7 +137,7 @@ function renderDashboard() {
     let processCount = 0;
 
     // ENLACE WEB REAL DE GITHUB PAGES (Para que funcione en el teléfono del cliente)
-    const baseUrl = "https://kevingonza048.github.io/TallerApp/cliente.html";
+    const baseUrl = "https://kevingonza048-dot.github.io/TallerApp/cliente.html";
 
     vehiclesDB.forEach((v, idx) => {
         if (v.status === 'Listo') readyCount++;
