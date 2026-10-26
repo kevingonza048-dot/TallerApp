@@ -127,7 +127,7 @@ function guardarNuevoVehiculo(e) {
     alert("✅ Vehículo registrado correctamente.");
 }
 
-// Renderizar tabla y tarjetas del Panel Principal con botón de enlace único
+// Renderizar tabla y tarjetas del Panel Principal con enlace web real para celulares
 function renderDashboard() {
     const tbody = document.getElementById('vehicle-table-body');
     if (!tbody) return;
@@ -136,9 +136,8 @@ function renderDashboard() {
     let readyCount = 0;
     let processCount = 0;
 
-    const baseUrl = window.location.href.includes('github.io') 
-        ? window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1) + 'cliente.html' 
-        : 'file:///E:/TallerApp/cliente.html';
+    // ENLACE WEB REAL DE GITHUB PAGES (Para que funcione en el teléfono del cliente)
+    const baseUrl = "https://kevingonza048.github.io/TallerApp/cliente.html";
 
     vehiclesDB.forEach((v, idx) => {
         if (v.status === 'Listo') readyCount++;
@@ -153,7 +152,7 @@ function renderDashboard() {
             <td><span class="badge ${v.status === 'Listo' ? 'info' : 'warning'}">${v.status}</span></td>
             <td>
                 <div style="display: flex; gap: 6px; align-items: center;">
-                    <input type="text" readonly value="${linkCliente}" style="width: 160px; padding: 4px; background: #121212; border: 1px solid #444; color: #fff; font-size: 10px; border-radius: 4px;" id="table-link-${v.plate}">
+                    <input type="text" readonly value="${linkCliente}" style="width: 180px; padding: 4px; background: #121212; border: 1px solid #444; color: #fff; font-size: 10px; border-radius: 4px;" id="table-link-${v.plate}">
                     <button onclick="copiarEnlaceTabla('${v.plate}')" style="background: #27ae60; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">📋 Copiar</button>
                     <button onclick="eliminarVehiculo(${idx})" style="background: #e74c3c; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">❌</button>
                 </div>
@@ -172,7 +171,7 @@ function copiarEnlaceTabla(plate) {
     input.select();
     input.setSelectionRange(0, 99999);
     navigator.clipboard.writeText(input.value);
-    alert("📋 ¡Enlace único copiado al portapapeles! Ya puedes enviarlo por WhatsApp al cliente.");
+    alert("📋 ¡Enlace web copiado al portapapeles! Ya puedes enviarlo por WhatsApp al celular del cliente.");
 }
 
 function eliminarVehiculo(index) {
@@ -202,7 +201,7 @@ function cargarSelectoresSeguimiento() {
     });
 }
 
-// Guardar actualización de seguimiento con foto
+// Guardar actualización de seguimiento con foto (acumulativa para historial)
 function actualizarAvanceFoto(e) {
     e.preventDefault();
     const plate = document.getElementById('t-plate-select').value;
@@ -231,9 +230,7 @@ function actualizarAvanceFoto(e) {
         };
         reader.readAsDataURL(fileInput.files[0]);
     } else {
-        let existingTracking = trackingDB.find(t => t.plate === plate);
-        let photoAnterior = existingTracking ? existingTracking.photo : null;
-        guardarRegistroSeguimiento({ plate, status, comment, photo: photoAnterior, date: today });
+        guardarRegistroSeguimiento({ plate, status, comment, photo: null, date: today });
     }
 }
 
@@ -244,10 +241,10 @@ function guardarRegistroSeguimiento(registro) {
     document.getElementById('tracking-form').reset();
     renderAvancesList();
     renderDashboard();
-    alert("📸 ¡Avance y estado actualizados correctamente para el cliente!");
+    alert("📸 ¡Avance y estado actualizados correctamente en el historial!");
 }
 
-// Renderizar historial de fotos y estados de seguimiento
+// Renderizar historial de fotos y estados de seguimiento en el taller
 function renderAvancesList() {
     const container = document.getElementById('tracking-list');
     if (!container) return;
