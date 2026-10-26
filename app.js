@@ -84,12 +84,8 @@ function renderDashboard() {
         if (v.status === 'Listo') readyCount++;
         else processCount++;
 
-        const avs = trackingDB.filter(t => t.plate.toUpperCase() === v.plate.toUpperCase());
-        const ultimoEstado = avs.length > 0 ? avs[0].status : v.status;
-        const ultimaFoto = avs.length > 0 && avs[0].photo ? avs[0].photo : "";
-        const ultimoComentario = avs.length > 0 && avs[0].comment ? avs[0].comment : "Vehículo en proceso en el taller.";
-
-        const linkCliente = `${baseUrl}?chapa=${encodeURIComponent(v.plate)}&modelo=${encodeURIComponent(v.model)}&estado=${encodeURIComponent(ultimoEstado)}&comentario=${encodeURIComponent(ultimoComentario)}&foto=${encodeURIComponent(ultimaFoto)}`;
+        // Enlace súper corto y limpio usando solo la chapa
+        const linkCliente = `${baseUrl}?chapa=${encodeURIComponent(v.plate)}`;
 
         tbody.innerHTML += `
             <tr>
@@ -116,7 +112,7 @@ function copiarEnlaceTabla(plate) {
     const input = document.getElementById(`table-link-${plate}`);
     input.select();
     navigator.clipboard.writeText(input.value);
-    alert("📋 ¡Enlace inteligente copiado con éxito y sin errores de tamaño!");
+    alert("📋 ¡Enlace copiado con éxito!");
 }
 
 function eliminarVehiculo(index) {
@@ -163,7 +159,7 @@ function actualizarAvanceFoto(e) {
             const img = new Image();
             img.onload = function () {
                 const canvas = document.createElement('canvas');
-                const MAX_SIZE = 400; // Redimensionamos para que el enlace nunca sea pesado
+                const MAX_SIZE = 500;
                 let width = img.width;
                 let height = img.height;
                 if (width > height) {
@@ -175,7 +171,7 @@ function actualizarAvanceFoto(e) {
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                const compressedPhoto = canvas.toDataURL('image/jpeg', 0.5); // Calidad optimizada
+                const compressedPhoto = canvas.toDataURL('image/jpeg', 0.6);
                 guardarRegistroSeguimiento({ plate, status, comment, photo: compressedPhoto, date: today });
             };
             img.src = evt.target.result;
@@ -192,7 +188,7 @@ function guardarRegistroSeguimiento(registro) {
     document.getElementById('tracking-form').reset();
     renderAvancesList();
     renderDashboard();
-    alert("📸 ¡Foto comprimida y guardada con éxito!");
+    alert("📸 ¡Avance y foto guardados correctamente en el sistema!");
 }
 
 function renderAvancesList() {
