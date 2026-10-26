@@ -3,337 +3,425 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión Taller - Chapería y Pintura</title>
-    <link rel="stylesheet" href="styles.css">
-    <!-- Librería para la generación de PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <title>A.G.P. Chapería y Pintura - Estado de Vehículos</title>
     <style>
-        .parts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 10px;
-            max-height: 250px;
-            overflow-y: auto;
-            background: #252525;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #444;
-            margin-bottom: 12px;
+        :root {
+            --primary: #d9381e;
+            --primary-dark: #b52c14;
+            --dark: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #f5f5f5;
+            --text-muted: #aaa;
+            --border: #333;
+            --success: #28a745;
         }
-        .part-item {
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--dark);
+            color: var(--text-main);
+            min-height: 100vh;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #1e1e1e;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 13px;
+            flex-direction: column;
         }
-        .part-checks label {
-            margin-left: 6px;
-            font-size: 11px;
-            cursor: pointer;
+
+        header {
+            background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+            border-bottom: 3px solid var(--primary);
+            padding: 20px;
+            text-align: center;
         }
-        .view-section {
-            display: none;
+
+        header h1 {
+            font-size: 1.8rem;
+            color: var(--text-main);
+            margin-bottom: 5px;
         }
-        .view-section.active-view {
-            display: block;
+
+        header h1 span {
+            color: var(--primary);
         }
-        /* Estilos para tarjetas de seguimiento */
-        .tracking-card {
-            background: #1e1e1e;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 15px;
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 15px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--text-main);
+            border-left: 4px solid var(--primary);
+            padding-left: 10px;
+        }
+
+        .form-group {
             margin-bottom: 15px;
         }
-        .tracking-img {
-            max-width: 100%;
-            max-height: 180px;
-            border-radius: 6px;
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background-color: #2a2a2a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: #444;
             margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #555;
+        }
+
+        /* Vista Cliente Resultado */
+        .result-box {
+            display: none;
+            margin-top: 20px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+        .vehicle-img {
+            width: 100%;
+            max-height: 350px;
             object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            background-color: rgba(217, 56, 30, 0.2);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-item label {
+            font-size: 0.8rem;
+        }
+
+        .info-item p {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .description-box {
+            background-color: #252525;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 3px solid var(--primary);
+        }
+
+        /* Pestañas de navegación superiores */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: #2a2a2a;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: auto;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .whatsapp-link {
+            display: inline-block;
+            background-color: #25d366;
+            color: white;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .whatsapp-link:hover {
+            background-color: #1ebe5d;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Menú Lateral Interactivo -->
-        <aside class="sidebar">
-            <h2>🚗 TallerPro</h2>
-            <ul>
-                <li><a href="#" id="menu-home" class="active" onclick="switchView('home')">📊 Panel Principal</a></li>
-                <li><a href="#" id="menu-tracking" onclick="switchView('tracking')">📸 Seguimiento de Fotos</a></li>
-                <li><a href="#" id="menu-budget" onclick="switchView('budget')">📝 Presupuestos</a></li>
-                <li><a href="#" onclick="alert('Sección Inventario en desarrollo');">📦 Inventario</a></li>
-            </ul>
-        </aside>
 
-        <!-- Contenido Principal -->
-        <main class="main-content">
-            
-            <!-- VISTA 1: PANEL PRINCIPAL -->
-            <div id="view-home" class="view-section active-view">
-                <header>
-                    <h1>Recepción y Estado del Taller</h1>
-                    <p>Sistema de gestión profesional para chapería y pintura</p>
-                </header>
+    <header>
+        <h1>A.G.P. <span>Chapería y Pintura</span></h1>
+        <p>Seguimiento en línea del estado de su vehículo</p>
+    </header>
 
-                <section class="dashboard-cards">
-                    <div class="card">
-                        <h3>Autos en Taller</h3>
-                        <p class="number" id="dash-total">0</p>
-                    </div>
-                    <div class="card">
-                        <h3>En Proceso</h3>
-                        <p class="number" id="dash-process">0</p>
-                    </div>
-                    <div class="card">
-                        <h3>Listos para Entrega</h3>
-                        <p class="number" id="dash-ready">0</p>
-                    </div>
-                </section>
+    <div class="container">
+        <!-- Pestañas para alternar entre Cliente y Taller -->
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('cliente')">Portal Cliente</button>
+            <button class="tab-btn" onclick="switchTab('taller')">Panel Taller (Admin)</button>
+        </div>
 
-                <section class="recent-work">
-                    <h2>Vehículos Recientes</h2>
-                    
-                    <div class="form-card" style="background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #333;">
-                        <h3 style="margin-bottom: 15px; color: #3498db;">➕ Registrar Nuevo Vehículo</h3>
-                        <form id="vehicle-form" onsubmit="guardarNuevoVehiculo(event)" style="display: flex; gap: 15px; flex-wrap: wrap;">
-                            <input type="text" id="plate" placeholder="Placa / Patente (Ej: ABC-1234)" required style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-                            <input type="text" id="model" placeholder="Vehículo (Ej: Toyota Hilux)" required style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-                            <input type="text" id="client" placeholder="Nombre del Asegurado" required style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-                            <select id="status" style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-                                <option value="Ingreso">1. Ingreso</option>
-                                <option value="Chapería">2. Chapería</option>
-                                <option value="Pintura">3. Pintura</option>
-                                <option value="Pulido">4. Pulido</option>
-                                <option value="Listo">5. Listo</option>
-                            </select>
-                            <button type="submit" style="background: #3498db; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Guardar</button>
-                        </form>
-                    </div>
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Placa / Patente</th>
-                                <th>Vehículo</th>
-                                <th>Asegurado</th>
-                                <th>Estado</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="vehicle-table-body">
-                        </tbody>
-                    </table>
-                </section>
-            </div>
-
-            <!-- VISTA 2: SEGUIMIENTO FOTOGRÁFICO Y ESTADOS -->
-            <div id="view-tracking" class="view-section">
-                <header>
-                    <h1>📸 Seguimiento Fotográfico de Vehículos</h1>
-                    <p>Actualiza el estado y sube fotos del avance para consulta de los clientes</p>
-                </header>
-
-                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                    <!-- Formulario de actualización de estado y foto -->
-                    <div style="flex: 1; min-width: 300px; background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333;">
-                        <h3 style="color: #3498db; margin-bottom: 15px;">Actualizar Avance de Vehículo</h3>
-                        <form id="tracking-form" onsubmit="actualizarAvanceFoto(event)">
-                            <label style="color: #aaa; font-size: 13px;">Seleccionar Vehículo:</label>
-                            <select id="t-plate-select" required style="width: 100%; padding: 10px; margin-bottom: 15px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-                            </select>
-
-                            <label style="color: #aaa; font-size: 13px;">Nuevo Estado / Etapa:</label>
-                            <select id="t-status-select" required style="width: 100%; padding: 10px; margin-bottom: 15px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-                                <option value="Ingreso">1. Ingreso al Taller</option>
-                                <option value="Chapería">2. Trabajo de Chapería</option>
-                                <option value="Pintura">3. Cabina de Pintura</option>
-                                <option value="Pulido">4. Pulido y Detallado</option>
-                                <option value="Listo">5. Listo para Entrega</option>
-                            </select>
-
-                            <label style="color: #aaa; font-size: 13px;">Adjuntar Foto de Avance:</label>
-                            <input type="file" id="t-photo-input" accept="image/*" style="width: 100%; padding: 8px; margin-bottom: 15px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-
-                            <label style="color: #aaa; font-size: 13px;">Comentario / Nota del trabajo:</label>
-                            <textarea id="t-comment" rows="2" placeholder="Ej: Se completó la aplicación de masilla y primer..." style="width: 100%; padding: 10px; margin-bottom: 15px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;"></textarea>
-
-                            <button type="submit" style="width: 100%; background: #3498db; color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">
-                                📸 Actualizar Avance y Foto
-                            </button>
-                        </form>
-                    </div>
-
-                    <!-- Lista de Avances Guardados -->
-                    <div style="flex: 1.5; min-width: 320px;">
-                        <h3 style="color: #27ae60; margin-bottom: 15px;">Historial de Avances</h3>
-                        <div id="tracking-list">
-                            <p style="color: #aaa;">No hay registros de seguimiento cargados aún.</p>
-                        </div>
-                    </div>
+        <!-- SECCIÓN CLIENTE -->
+        <div id="tab-cliente" class="tab-content active">
+            <div class="card">
+                <h2>Consulte el estado de su vehículo</h2>
+                <div class="form-group">
+                    <label for="searchChapa">Ingrese su número de Chapa / Matrícula:</label>
+                    <input type="text" id="searchChapa" placeholder="Ej: ABC123 o P123456" style="text-transform: uppercase;">
                 </div>
-            </div>
+                <button onclick="buscarVehiculo()">Consultar Estado</button>
 
-            <!-- VISTA 3: SECCIÓN DE PRESUPUESTOS EXCLUSIVA -->
-            <div id="view-budget" class="view-section">
-                <section class="budget-section">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <div>
-                            <h2>📝 Generar Nota de Presupuesto Profesional</h2>
-                            <p style="color: #aaa; margin: 0;">Complete los datos y seleccione las piezas para generar el comprobante oficial de A.G.P.</p>
-                        </div>
-                        <button type="button" onclick="limpiarPresupuestoWeb()" style="background: #e74c3c; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;">
-                            🧹 Limpiar Todo
-                        </button>
+                <div id="resultBox" class="result-box">
+                    <img id="resFoto" class="vehicle-img" src="" alt="Foto del vehículo en taller">
+                    <div style="text-align: center;">
+                        <span id="resEstado" class="status-badge">En Proceso</span>
                     </div>
-                    
-                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                        <!-- Formulario de Presupuesto -->
-                        <form id="budget-form" style="flex: 1; min-width: 320px; background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333;">
-                            <h3 style="color: #3498db; margin-bottom: 15px;">Datos del Asegurado y Trabajo</h3>
-                            
-                            <input type="text" id="b-client" placeholder="Asegurado / Propietario" required style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-                            <input type="text" id="b-vehicle" placeholder="Vehículo / Modelo" required style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-                            <input type="text" id="b-plate" placeholder="Placa / Chapa" required style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-                            
-                            <input type="text" id="b-insurance" placeholder="Seguro" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-                            <input type="text" id="b-claim" placeholder="Nº de Siniestro" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-
-                            <!-- Selección rápida de piezas -->
-                            <label style="color: #3498db; font-size: 13px; font-weight: bold; display: block; margin-bottom: 6px;">Selección de Piezas a Trabajar (Ch: Chapear | P: Pintar | E: Encuadre):</label>
-                            <div class="parts-grid" id="parts-selector"></div>
-
-                            <textarea id="b-detail" placeholder="Detalle adicional o trabajos especiales..." rows="2" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;"></textarea>
-                            <textarea id="b-observations" placeholder="Observaciones generales..." rows="2" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;"></textarea>
-                            <textarea id="b-parts" placeholder="Repuestos solicitados..." rows="2" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;"></textarea>
-
-                            <input type="number" id="b-total" placeholder="Monto Total (₲)" required style="width: 100%; padding: 10px; margin-bottom: 15px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
-
-                            <button type="button" onclick="generatePDF()" style="width: 100%; background: #27ae60; color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px;">
-                                📄 Descargar Presupuesto en PDF
-                            </button>
-                        </form>
-
-                        <!-- Documento Imprimible Estilo Nota de Presupuesto A.G.P. -->
-                        <div id="pdf-template" style="display: none; width: 700px; padding: 25px; background-color: #ffffff !important; color: #000000 !important; font-family: 'Arial', sans-serif; font-size: 11px; border: 1px solid #000;">
-                            
-                            <!-- Encabezado Oficial -->
-                            <table style="width: 100%; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; background-color: #ffffff !important; color: #000000 !important;">
-                                <tr>
-                                    <td style="width: 60%; vertical-align: top; background-color: #ffffff !important; color: #000000 !important;">
-                                        <h1 style="margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #000000 !important;">A.G.P.</h1>
-                                        <p style="margin: 2px 0; font-size: 10px; font-weight: bold; color: #000000 !important;">CHAPERÍA y PINTURA — MECÁNICA GENERAL</p>
-                                        <p style="margin: 2px 0; font-size: 9px; color: #000000 !important;">Avda. Cacique Lambaré Nº 422 esq. Bernardino Caballero</p>
-                                        <p style="margin: 2px 0; font-size: 9px; color: #000000 !important;">Tel.: (0981) 409 723 - (0981) 793 878</p>
-                                        <p style="margin: 2px 0; font-size: 9px; color: #000000 !important;">E-mail: agptaller@gmail.com — Lambaré - Paraguay</p>
-                                    </td>
-                                    <td style="width: 40%; text-align: right; vertical-align: top; background-color: #ffffff !important; color: #000000 !important;">
-                                        <p style="margin: 0; font-weight: bold; font-size: 11px; color: #000000 !important;">RUC: 2062297 - 0</p>
-                                        <h2 style="margin: 5px 0 2px 0; font-size: 15px; font-weight: bold; color: #000000 !important;">NOTA DE PRESUPUESTO</h2>
-                                        <p style="margin: 0; font-size: 8px; font-weight: bold; text-transform: uppercase; color: #000000 !important;">NO VÁLIDO COMO COMPROBANTE DE VENTA</p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <!-- Datos Asegurado -->
-                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #000; background-color: #ffffff !important; color: #000000 !important;">
-                                <tr>
-                                    <td style="padding: 4px; border: 1px solid #000; width: 50%; color: #000000 !important; background-color: #ffffff !important;"><strong>Asegurado:</strong> <span id="pdf-client"></span></td>
-                                    <td style="padding: 4px; border: 1px solid #000; width: 50%; color: #000000 !important; background-color: #ffffff !important;"><strong>Fecha:</strong> <span id="pdf-date"></span></td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 4px; border: 1px solid #000; color: #000000 !important; background-color: #ffffff !important;"><strong>Vehículo:</strong> <span id="pdf-vehicle"></span></td>
-                                    <td style="padding: 4px; border: 1px solid #000; color: #000000 !important; background-color: #ffffff !important;"><strong>Chapa Nº / Placa:</strong> <span id="pdf-plate"></span></td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 4px; border: 1px solid #000; color: #000000 !important; background-color: #ffffff !important;"><strong>Seguro:</strong> <span id="pdf-insurance"></span></td>
-                                    <td style="padding: 4px; border: 1px solid #000; color: #000000 !important; background-color: #ffffff !important;"><strong>Nº de Siniestro:</strong> <span id="pdf-claim"></span></td>
-                                </tr>
-                            </table>
-
-                            <!-- Tabla de Piezas -->
-                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #000000; background-color: #ffffff !important;">
-                                <thead>
-                                    <tr style="background-color: #f2f2f2 !important; font-size: 10px; color: #000000 !important;">
-                                        <th style="border: 1px solid #000000; padding: 4px; text-align: left;">PARTES / REPARACIONES MARCADAS</th>
-                                        <th style="border: 1px solid #000000; padding: 4px; width: 35px; text-align: center;">Ch.</th>
-                                        <th style="border: 1px solid #000000; padding: 4px; width: 35px; text-align: center;">P.</th>
-                                        <th style="border: 1px solid #000000; padding: 4px; width: 35px; text-align: center;">E.</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="pdf-parts-table-body"></tbody>
-                            </table>
-
-                            <div id="pdf-detail-box" style="border: 1px solid #000; padding: 6px; margin-bottom: 12px; background-color: #ffffff !important; display: none;">
-                                <strong>Detalles Adicionales:</strong> <span id="pdf-detail"></span>
-                            </div>
-
-                            <!-- Observaciones -->
-                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #000000; background-color: #ffffff !important;">
-                                <tr>
-                                    <td style="border: 1px solid #000000; padding: 4px; font-weight: bold; font-size: 9px; color: #000000 !important; background-color: #f2f2f2 !important;">OBSERVACIONES:</td>
-                                </tr>
-                                <tr>
-                                    <td style="border: 1px solid #000000; padding: 6px; white-space: pre-line; font-size: 10px; color: #000000 !important; background-color: #ffffff !important;" id="pdf-observations"></td>
-                                </tr>
-                            </table>
-
-                            <!-- Repuestos -->
-                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #000000; background-color: #ffffff !important;">
-                                <tr>
-                                    <td style="border: 1px solid #000000; padding: 4px; font-weight: bold; font-size: 9px; color: #000000 !important; background-color: #f2f2f2 !important;">REPUESTOS SOLICITADOS:</td>
-                                </tr>
-                                <tr>
-                                    <td style="border: 1px solid #000000; padding: 6px; white-space: pre-line; font-size: 10px; color: #000000 !important; background-color: #ffffff !important;" id="pdf-parts"></td>
-                                </tr>
-                            </table>
-
-                            <!-- Total -->
-                            <div style="border: 1px solid #000; padding: 8px; margin-bottom: 25px; background-color: #ffffff !important; color: #000000 !important;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                    <span style="font-size: 12px; font-weight: bold;">Son Guaraníes:</span>
-                                    <span id="pdf-total" style="font-size: 15px; font-weight: bold; color: #000000 !important;"></span>
-                                </div>
-                                <div style="font-size: 11px; font-style: italic; color: #222222; border-top: 1px dashed #ccc; padding-top: 4px;">
-                                    <strong>Monto en letras:</strong> <span id="pdf-total-words"></span>
-                                </div>
-                                <div style="font-size: 9px; color: #555555; margin-top: 3px; text-align: right;">
-                                    *(Todos los precios del presente presupuesto ya incluyen el 10% de IVA)
-                                </div>
-                            </div>
-
-                            <!-- Firma -->
-                            <table style="width: 100%; margin-top: 20px; background-color: #ffffff !important; color: #000000 !important;">
-                                <tr>
-                                    <td style="width: 50%; text-align: center; vertical-align: bottom; background-color: #ffffff !important; color: #000000 !important;">
-                                        <div style="border-top: 1px solid #000; width: 180px; margin: 0 auto; padding-top: 4px; font-size: 10px; font-weight: bold; color: #000000 !important;">Firma / A.G.P.</div>
-                                    </td>
-                                    <td style="width: 50%; text-align: right; vertical-align: bottom; background-color: #ffffff !important; color: #000000 !important;">
-                                        <p style="margin: 0; font-size: 10px; font-weight: bold; color: #000000 !important;">VÁLIDO POR 20 DÍAS</p>
-                                    </td>
-                                </tr>
-                            </table>
-
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Propietario</label>
+                            <p id="resCliente">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Vehículo</label>
+                            <p id="resVehiculo">-</p>
                         </div>
                     </div>
-                </section>
+                    <div class="description-box">
+                        <label>Observaciones del Taller:</label>
+                        <p id="resDesc" style="margin-top: 5px; color: #ddd;">-</p>
+                    </div>
+                    <a id="resWp" href="#" target="_blank" class="whatsapp-link">Contactar con el Taller vía WhatsApp</a>
+                </div>
+                <p id="notFoundMsg" style="display:none; color: var(--primary); text-align: center; margin-top: 15px; font-weight: bold;">No se encontró ningún vehículo registrado con esa chapa.</p>
             </div>
+        </div>
 
-        </main>
+        <!-- SECCIÓN TALLER (ADMIN) -->
+        <div id="tab-taller" class="tab-content">
+            <div class="card">
+                <h2>Registrar / Actualizar Vehículo</h2>
+                <form id="tallerForm" onsubmit="guardarVehiculo(event)">
+                    <div class="form-group">
+                        <label>Número de Chapa / Matrícula:</label>
+                        <input type="text" id="tChapa" required placeholder="Ej: ABC123" style="text-transform: uppercase;">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre del Cliente:</label>
+                        <input type="text" id="tCliente" required placeholder="Nombre y Apellido">
+                    </div>
+                    <div class="form-group">
+                        <label>Modelo del Vehículo:</label>
+                        <input type="text" id="TVehiculo" required placeholder="Ej: Toyota Vitz / Kia Picanto">
+                    </div>
+                    <div class="form-group">
+                        <label>Estado del Trabajo:</label>
+                        <select id="tEstado">
+                            <option value="Recibido en Taller">Recibido en Taller</option>
+                            <option value="Desarme y Evaluación">Desarme y Evaluación</option>
+                            <option value="Chapería en Proceso">Chapería en Proceso</option>
+                            <option value="Preparación para Pintura">Preparación para Pintura</option>
+                            <option value="Pintura en Cabina">Pintura en Cabina</option>
+                            <option value="Armado y Pulido Final">Armado y Pulido Final</option>
+                            <option value="Listo para Entrega">¡Listo para Entrega!</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción / Detalle de los trabajos:</label>
+                        <textarea id="tDesc" rows="3" placeholder="Ej: Enderezado de guardabarros y pintura completa de puerta trasera..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Foto del Vehículo (Desde tu notebook):</label>
+                        <input type="file" id="tFotoFile" accept="image/*" required>
+                    </div>
+                    <button type="submit">Guardar y Publicar en Línea</button>
+                </form>
+                <p id="saveMsg" style="display:none; color: var(--success); text-align: center; margin-top: 15px; font-weight: bold;">¡Vehículo guardado con éxito! El cliente ya puede consultarlo.</p>
+            </div>
+        </div>
     </div>
 
-    <script src="app.js"></script>
+    <footer>
+        <p>&copy; 2026 A.G.P. Chapería y Pintura - Lambaré, Paraguay</p>
+    </footer>
+
     <script>
-        function limpiarPresupuestoWeb() {
-            if (confirm("¿Seguro que deseas limpiar y borrar todos los datos actuales?")) {
-                document.getElementById('budget-form').reset();
-                const checkboxes = document.querySelectorAll('.parts-grid input[type="checkbox"]');
-                checkboxes.forEach(cb => cb.checked = false);
-                alert("🧹 ¡Datos limpiados con éxito!");
+        // Cambiar entre pestañas
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            if(tab === 'cliente') {
+                document.getElementById('tab-cliente').classList.add('active');
+                event.target.classList.add('active');
+            } else {
+                document.getElementById('tab-taller').classList.add('active');
+                event.target.classList.add('active');
+            }
+        }
+
+        // Guardar vehículo desde el panel taller
+        function guardarVehiculo(e) {
+            e.preventDefault();
+            
+            const chapa = document.getElementById('tChapa').value.trim().toUpperCase();
+            const cliente = document.getElementById('tCliente').value;
+            const vehiculo = document.getElementById('TVehiculo').value;
+            const estado = document.getElementById('tEstado').value;
+            const desc = document.getElementById('tDesc').value;
+            const fileInput = document.getElementById('tFotoFile');
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(uploadEvent) {
+                    const base64Image = uploadEvent.target.result;
+                    
+                    const datosVehiculo = {
+                        cliente: cliente,
+                        vehiculo: vehiculo,
+                        estado: estado,
+                        desc: desc,
+                        foto: base64Image
+                    };
+
+                    // Guardar en la memoria local del navegador
+                    let db = JSON.parse(localStorage.getItem('agp_taller_db')) || {};
+                    db[chapa] = datosVehiculo;
+                    localStorage.setItem('agp_taller_db', JSON.stringify(db));
+
+                    document.getElementById('saveMsg').style.display = 'block';
+                    document.getElementById('tallerForm').reset();
+                    
+                    setTimeout(() => {
+                        document.getElementById('saveMsg').style.display = 'none';
+                    }, 4000);
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        // Buscar vehículo desde la vista del cliente
+        function buscarVehiculo() {
+            const chapaInput = document.getElementById('searchChapa').value.trim().toUpperCase();
+            const resultBox = document.getElementById('resultBox');
+            const notFoundMsg = document.getElementById('notFoundMsg');
+
+            if(!chapaInput) return;
+
+            let db = JSON.parse(localStorage.getItem('agp_taller_db')) || {};
+            const auto = db[chapaInput];
+
+            if(auto) {
+                document.getElementById('resFoto').src = auto.foto;
+                document.getElementById('resEstado').innerText = auto.estado;
+                document.getElementById('resCliente').innerText = auto.cliente;
+                document.getElementById('resVehiculo').innerText = auto.vehiculo;
+                document.getElementById('resDesc').innerText = auto.desc;
+                
+                // Enlace directo a WhatsApp del taller (reemplaza con tu número si deseas)
+                const mensajeWp = encodeURIComponent(`Hola, consulto por mi vehículo chapa ${chapaInput} (${auto.vehiculo}).`);
+                document.getElementById('resWp').href = `https://wa.me/595981000000?text=${mensajeWp}`;
+
+                resultBox.style.display = 'block';
+                notFoundMsg.style.display = 'none';
+            } else {
+                resultBox.style.display = 'none';
+                notFoundMsg.style.display = 'block';
             }
         }
     </script>
