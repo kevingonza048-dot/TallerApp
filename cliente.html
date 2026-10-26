@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estado de su Vehículo - A.G.P. Chapería y Pintura</title>
+    <title>Historial del Vehículo - A.G.P. Chapería y Pintura</title>
     <style>
         body {
             background-color: #121212;
@@ -13,12 +13,11 @@
             padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
             min-height: 100vh;
         }
         .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             background: #1e1e1e;
             border: 1px solid #333;
             border-radius: 12px;
@@ -44,46 +43,65 @@
             font-size: 0.85rem;
             margin: 0;
         }
-        .info-group {
-            margin-bottom: 15px;
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #252525;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
         }
         .info-label {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #888;
             text-transform: uppercase;
             font-weight: bold;
         }
         .info-value {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #fff;
             font-weight: bold;
-            margin-top: 3px;
+            margin-top: 2px;
         }
         .status-badge {
-            display: inline-block;
             background: rgba(52, 152, 219, 0.2);
             color: #3498db;
             border: 1px solid #3498db;
-            padding: 6px 15px;
+            padding: 5px 12px;
             border-radius: 20px;
             font-weight: bold;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
+        }
+        /* Estilos para cada tarjeta del historial */
+        .timeline-card {
+            background: #252525;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
             margin-bottom: 15px;
+        }
+        .timeline-date {
+            font-size: 0.75rem;
+            color: #aaa;
+            margin-bottom: 8px;
+            text-align: right;
         }
         .vehicle-img {
             width: 100%;
-            max-height: 300px;
+            max-height: 320px;
             object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid #444;
-            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #555;
+            margin-top: 10px;
         }
         .comment-box {
-            background: #252525;
-            padding: 12px;
-            border-radius: 8px;
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 6px;
             border-left: 4px solid #3498db;
-            margin-bottom: 20px;
+            margin-top: 10px;
         }
         .whatsapp-btn {
             display: block;
@@ -95,6 +113,7 @@
             text-decoration: none;
             font-weight: bold;
             font-size: 1rem;
+            margin-top: 25px;
         }
         .whatsapp-btn:hover {
             background-color: #1ebe5d;
@@ -112,28 +131,25 @@
     <div class="container" id="mainCard">
         <header>
             <h1>A.G.P. <span>Chapería y Pintura</span></h1>
-            <p>Seguimiento en línea del estado de su vehículo</p>
+            <p>Evolución y seguimiento fotográfico en línea</p>
         </header>
 
         <div id="contentSection">
-            <div style="text-align: center;">
-                <span id="lblStatus" class="status-badge">Cargando...</span>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                <div class="info-group">
+            <div class="info-header">
+                <div>
                     <div class="info-label">Vehículo / Chapa</div>
                     <div class="info-value" id="lblPlate" style="color: #3498db;">-</div>
                 </div>
+                <div>
+                    <div class="info-label">Estado Actual</div>
+                    <div style="margin-top: 4px;"><span id="lblStatus" class="status-badge">-</span></div>
+                </div>
             </div>
 
-            <div id="imgContainer" style="text-align: center;">
-                <!-- Aquí se muestra la foto -->
-            </div>
-
-            <div class="comment-box">
-                <div class="info-label" style="margin-bottom: 4px;">Observaciones del Taller</div>
-                <p id="lblComment" style="margin: 0; color: #ddd; font-size: 0.95rem;">-</p>
+            <h3 style="font-size: 1rem; color: #aaa; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px;">📸 Historial de Avances del Taller</h3>
+            
+            <div id="timelineContainer">
+                <!-- Aquí se inyectarán todas las fotos del historial -->
             </div>
 
             <a id="btnWp" href="#" target="_blank" class="whatsapp-btn">💬 Consultar con el Taller por WhatsApp</a>
@@ -150,28 +166,42 @@
         const chapaBusqueda = urlParams.get('chapa');
 
         if (chapaBusqueda) {
-            // Buscamos en agp_tracking y también en agp_vehicles para asegurar coincidencia
             let trackings = JSON.parse(localStorage.getItem('agp_tracking')) || [];
             let vehiculos = JSON.parse(localStorage.getItem('agp_vehicles')) || [];
 
-            let autoTracking = trackings.find(t => t.plate.toUpperCase() === chapaBusqueda.toUpperCase());
+            // Filtrar TODOS los registros que correspondan a esta chapa
+            let historialAuto = trackings.filter(t => t.plate.toUpperCase() === chapaBusqueda.toUpperCase());
             let autoVehiculo = vehiculos.find(v => v.plate.toUpperCase() === chapaBusqueda.toUpperCase());
 
-            if (autoTracking || autoVehiculo) {
-                const estado = autoTracking ? autoTracking.status : (autoVehiculo ? autoVehiculo.status : 'En Proceso');
+            if (historialAuto.length > 0 || autoVehiculo) {
+                const estadoActual = historialAuto.length > 0 ? historialAuto[0].status : (autoVehiculo ? autoVehiculo.status : 'En Proceso');
                 const modelo = autoVehiculo ? autoVehiculo.model : chapaBusqueda.toUpperCase();
-                const comentario = autoTracking ? autoTracking.comment : "Vehículo registrado en el taller.";
-                const foto = autoTracking ? autoTracking.photo : null;
 
-                document.getElementById('lblStatus').innerText = estado;
-                document.getElementById('lblPlate').innerText = chapaBusqueda.toUpperCase() + (autoVehiculo ? ` (${autoVehiculo.model})` : '');
-                document.getElementById('lblComment').innerText = comentario || "Trabajos en curso según cronograma.";
+                document.getElementById('lblStatus').innerText = estadoActual;
+                document.getElementById('lblPlate').innerText = `${chapaBusqueda.toUpperCase()} (${modelo})`;
 
-                const imgContainer = document.getElementById('imgContainer');
-                if (foto) {
-                    imgContainer.innerHTML = `<img src="${foto}" class="vehicle-img" alt="Foto del vehículo en taller">`;
+                const timelineContainer = document.getElementById('timelineContainer');
+                timelineContainer.innerHTML = '';
+
+                if (historialAuto.length > 0) {
+                    historialAuto.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'timeline-card';
+                        card.innerHTML = `
+                            <div class="timeline-date">🕒 ${item.date || 'Fecha no registrada'}</div>
+                            <p style="margin: 0 0 5px 0; font-size: 0.9rem;"><strong>Etapa:</strong> <span style="color: #3498db;">${item.status}</span></p>
+                            ${item.photo ? `<img src="${item.photo}" class="vehicle-img" alt="Foto de avance">` : '<p style="color: #777; font-style: italic; font-size: 0.85rem;">Sin fotografía en este avance.</p>'}
+                            ${item.comment ? `
+                                <div class="comment-box">
+                                    <div class="info-label" style="margin-bottom: 2px;">Nota del Taller</div>
+                                    <p style="margin: 0; color: #ddd; font-size: 0.9rem;">"${item.comment}"</p>
+                                </div>
+                            ` : ''}
+                        `;
+                        timelineContainer.appendChild(card);
+                    });
                 } else {
-                    imgContainer.innerHTML = `<p style="color: #777; font-style: italic; margin-bottom: 15px;">Fotografía pendiente de actualización.</p>`;
+                    timelineContainer.innerHTML = `<p style="color: #777; font-style: italic; text-align: center; padding: 20px;">Aún no se han cargado fotos en el historial de este vehículo.</p>`;
                 }
 
                 // Enlace directo a WhatsApp del taller
