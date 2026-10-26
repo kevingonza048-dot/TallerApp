@@ -84,13 +84,11 @@ function renderDashboard() {
         if (v.status === 'Listo') readyCount++;
         else processCount++;
 
-        // Buscamos el último avance o foto de este auto para meterlo directo en el link
         const avs = trackingDB.filter(t => t.plate.toUpperCase() === v.plate.toUpperCase());
         const ultimoEstado = avs.length > 0 ? avs[0].status : v.status;
         const ultimaFoto = avs.length > 0 && avs[0].photo ? avs[0].photo : "";
         const ultimoComentario = avs.length > 0 && avs[0].comment ? avs[0].comment : "Vehículo en proceso en el taller.";
 
-        // Generamos un enlace inteligente con los datos codificados
         const linkCliente = `${baseUrl}?chapa=${encodeURIComponent(v.plate)}&modelo=${encodeURIComponent(v.model)}&estado=${encodeURIComponent(ultimoEstado)}&comentario=${encodeURIComponent(ultimoComentario)}&foto=${encodeURIComponent(ultimaFoto)}`;
 
         tbody.innerHTML += `
@@ -118,7 +116,7 @@ function copiarEnlaceTabla(plate) {
     const input = document.getElementById(`table-link-${plate}`);
     input.select();
     navigator.clipboard.writeText(input.value);
-    alert("📋 ¡Enlace inteligente copiado! Al enviarlo por WhatsApp, el cliente verá la foto y su estado exacto en cualquier teléfono.");
+    alert("📋 ¡Enlace inteligente copiado con éxito y sin errores de tamaño!");
 }
 
 function eliminarVehiculo(index) {
@@ -162,7 +160,25 @@ function actualizarAvanceFoto(e) {
     if (fileInput.files && fileInput.files[0]) {
         const reader = new FileReader();
         reader.onload = function (evt) {
-            guardarRegistroSeguimiento({ plate, status, comment, photo: evt.target.result, date: today });
+            const img = new Image();
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                const MAX_SIZE = 400; // Redimensionamos para que el enlace nunca sea pesado
+                let width = img.width;
+                let height = img.height;
+                if (width > height) {
+                    if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                } else {
+                    if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                const compressedPhoto = canvas.toDataURL('image/jpeg', 0.5); // Calidad optimizada
+                guardarRegistroSeguimiento({ plate, status, comment, photo: compressedPhoto, date: today });
+            };
+            img.src = evt.target.result;
         };
         reader.readAsDataURL(fileInput.files[0]);
     } else {
@@ -176,7 +192,7 @@ function guardarRegistroSeguimiento(registro) {
     document.getElementById('tracking-form').reset();
     renderAvancesList();
     renderDashboard();
-    alert("📸 ¡Avance y foto guardados! Ahora al copiar el enlace del vehículo, la foto viajará lista para el cliente.");
+    alert("📸 ¡Foto comprimida y guardada con éxito!");
 }
 
 function renderAvancesList() {
