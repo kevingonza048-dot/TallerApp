@@ -59,12 +59,6 @@
             text-transform: uppercase;
             font-weight: bold;
         }
-        .info-value {
-            font-size: 1rem;
-            color: #fff;
-            font-weight: bold;
-            margin-top: 2px;
-        }
         .status-badge {
             background: rgba(52, 152, 219, 0.2);
             color: #3498db;
@@ -80,12 +74,6 @@
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 15px;
-        }
-        .timeline-date {
-            font-size: 0.75rem;
-            color: #aaa;
-            margin-bottom: 8px;
-            text-align: right;
         }
         .vehicle-img {
             width: 100%;
@@ -121,7 +109,7 @@
 </head>
 <body>
 
-    <div class="container" id="mainCard">
+    <div class="container">
         <header>
             <h1>A.G.P. <span>Chapería y Pintura</span></h1>
             <p>Evolución y seguimiento fotográfico en línea</p>
@@ -131,7 +119,7 @@
             <div class="info-header">
                 <div>
                     <div class="info-label">Vehículo / Chapa</div>
-                    <div class="info-value" id="lblPlate" style="color: #3498db;">-</div>
+                    <div class="info-value" id="lblPlate" style="color: #3498db; font-size: 1rem; font-weight: bold; margin-top: 2px;">-</div>
                 </div>
                 <div>
                     <div class="info-label">Estado Actual</div>
@@ -142,7 +130,7 @@
             <h3 style="font-size: 1rem; color: #aaa; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px;">📸 Historial de Avances del Taller</h3>
             
             <div id="timelineContainer">
-                <!-- Se llena dinámicamente -->
+                <!-- Se llena automáticamente con la información del enlace -->
             </div>
 
             <a id="btnWp" href="#" target="_blank" class="whatsapp-btn">💬 Consultar con el Taller por WhatsApp</a>
@@ -151,42 +139,26 @@
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const chapaBusqueda = urlParams.get('chapa') || 'VEHICULO';
+        const chapa = urlParams.get('chapa') || 'VEHICULO';
+        const estado = urlParams.get('estado') || 'En Proceso';
+        const comentario = urlParams.get('comentario') || 'Vehículo en proceso de reparación.';
+        const foto = urlParams.get('foto') || '';
 
-        document.getElementById('lblPlate').innerText = chapaBusqueda.toUpperCase();
-
-        let trackings = JSON.parse(localStorage.getItem('agp_tracking')) || [];
-        let vehiculos = JSON.parse(localStorage.getItem('agp_vehicles')) || [];
-
-        let historialAuto = trackings.filter(t => t.plate && t.plate.toUpperCase() === chapaBusqueda.toUpperCase());
-        let autoVehiculo = vehiculos.find(v => v.plate && v.plate.toUpperCase() === chapaBusqueda.toUpperCase());
+        document.getElementById('lblPlate').innerText = chapa.toUpperCase();
+        document.getElementById('lblStatus').innerText = estado;
 
         const timelineContainer = document.getElementById('timelineContainer');
-
-        if (historialAuto.length > 0) {
-            document.getElementById('lblStatus').innerText = historialAuto[0].status;
-            timelineContainer.innerHTML = '';
-            historialAuto.forEach(item => {
-                timelineContainer.innerHTML += `
-                    <div class="timeline-card">
-                        <div class="timeline-date">🕒 ${item.date || 'Reciente'}</div>
-                        <p style="margin: 0 0 5px 0; font-size: 0.9rem;"><strong>Etapa:</strong> <span style="color: #3498db;">${item.status}</span></p>
-                        ${item.photo ? `<img src="${item.photo}" class="vehicle-img" alt="Foto">` : ''}
-                        ${item.comment ? `<div class="comment-box"><p style="margin:0; font-size:0.9rem; color:#ddd;">"${item.comment}"</p></div>` : ''}
-                    </div>
-                `;
-            });
-        } else {
-            document.getElementById('lblStatus').innerText = autoVehiculo ? autoVehiculo.status : "En Proceso";
-            timelineContainer.innerHTML = `
-                <div class="timeline-card">
-                    <p style="margin: 0 0 5px 0; font-size: 0.9rem;"><strong>Estado:</strong> <span style="color: #3498db;">${autoVehiculo ? autoVehiculo.status : "Ingreso al Taller"}</span></p>
-                    <p style="color: #aaa; font-style: italic; font-size: 0.9rem;">🚗 Vehículo registrado correctamente. Las fotos y actualizaciones del taller se mostrarán aquí en tiempo real.</p>
+        timelineContainer.innerHTML = `
+            <div class="timeline-card">
+                <p style="margin: 0 0 5px 0; font-size: 0.9rem;"><strong>Etapa:</strong> <span style="color: #3498db;">${estado}</span></p>
+                ${foto ? `<img src="${foto}" class="vehicle-img" alt="Foto de avance">` : '<p style="color: #777; font-style: italic; font-size: 0.85rem;">Pronto se cargarán fotografías de este vehículo.</p>'}
+                <div class="comment-box">
+                    <div class="info-label" style="margin-bottom: 2px;">Nota del Taller</div>
+                    <p style="margin: 0; color: #ddd; font-size: 0.9rem;">"${comentario}"</p>
                 </div>
-            `;
-        }
+            </div>`;
 
-        const msgWp = encodeURIComponent(`Hola A.G.P., consulto por el estado de mi vehículo chapa ${chapaBusqueda.toUpperCase()}.`);
+        const msgWp = encodeURIComponent(`Hola A.G.P., consulto por el estado de mi vehículo chapa ${chapa.toUpperCase()}.`);
         document.getElementById('btnWp').href = `https://wa.me/595981409723?text=${msgWp}`;
     </script>
 </body>
