@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historial del Vehiculo - A.G.P. Chaperia y Pintura</title>
+    <title>Historial del Vehículo - A.G.P. Chapería y Pintura</title>
     <style>
         body {
             background-color: #121212;
@@ -30,13 +30,13 @@
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
-        header h1 {
-            font-size: 1.5rem;
-            margin: 0 0 5px 0;
-            color: #fff;
-        }
-        header h1 span {
-            color: #3498db;
+        header img {
+            max-width: 160px;
+            height: auto;
+            margin-bottom: 10px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
         header p {
             color: #aaa;
@@ -111,14 +111,14 @@
 
     <div class="container">
         <header>
-            <h1>A.G.P. <span>Chaperia y Pintura</span></h1>
-            <p>Evolucion y seguimiento fotografico en linea</p>
+            <img src="logo.png" alt="A.G.P. Chapería y Pintura">
+            <p>Evolución y seguimiento fotográfico en línea</p>
         </header>
 
         <div id="contentSection">
             <div class="info-header">
                 <div>
-                    <div class="info-label">Vehiculo / Chapa</div>
+                    <div class="info-label">Vehículo / Chapa</div>
                     <div class="info-value" id="lblPlate" style="color: #3498db; font-size: 1rem; font-weight: bold; margin-top: 2px;">-</div>
                 </div>
                 <div>
@@ -143,9 +143,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         const chapaBusqueda = urlParams.get('chapa') || '';
 
-        document.getElementById('lblPlate').innerText = chapaBusqueda ? chapaBusqueda.toUpperCase() : 'VEHICULO';
+        document.getElementById('lblPlate').innerText = chapaBusqueda ? chapaBusqueda.toUpperCase() : 'VEHÍCULO';
 
-        const msgWp = encodeURIComponent(`Hola A.G.P., consulto por el estado de mi vehiculo chapa ${chapaBusqueda.toUpperCase()}.`);
+        const msgWp = encodeURIComponent(`Hola A.G.P., consulto por el estado de mi vehículo chapa ${chapaBusqueda.toUpperCase()}.`);
         document.getElementById('btnWp').href = `https://wa.me/595981409723?text=${msgWp}`;
 
         async function cargarHistorialCliente() {
@@ -177,7 +177,7 @@
                     timelineContainer.innerHTML = `
                         <div class="timeline-card">
                             <p style="margin: 0 0 5px 0; font-size: 0.9rem;"><strong>Estado:</strong> <span style="color: #3498db;">${autoVehiculo ? autoVehiculo.status : "Ingreso al Taller"}</span></p>
-                            <p style="color: #aaa; font-style: italic; font-size: 0.9rem;">Vehiculo registrado en A.G.P. Chaperia y Pintura. Las fotos y actualizaciones de avance se muestran aqui en tiempo real.</p>
+                            <p style="color: #aaa; font-style: italic; font-size: 0.9rem;">Vehículo registrado en A.G.P. Chapería y Pintura. Las fotos y actualizaciones de avance se muestran aquí en tiempo real.</p>
                         </div>
                     `;
                 }
