@@ -16,6 +16,8 @@ const vehicleParts = [
 
 let vehiclesDB = [];
 let trackingDB = [];
+let sentBudgetsDB = [];
+let appointmentsDB = [];
 
 // Sincronizar datos con la nube de Google al iniciar
 async function cargarDatosNube() {
@@ -24,27 +26,30 @@ async function cargarDatosNube() {
         const data = await response.json();
         vehiclesDB = data.vehicles || [];
         trackingDB = data.tracking || [];
-        renderDashboard();
-        if (document.getElementById('view-tracking').classList.contains('active-view')) {
-            cargarSelectoresSeguimiento();
-            renderAvancesList();
-        }
+        sentBudgetsDB = data.sentBudgets || [];
+        appointmentsDB = data.appointments || [];
+        renderAllViews();
     } catch (error) {
         console.error("Error al cargar de la nube:", error);
         vehiclesDB = JSON.parse(localStorage.getItem('agp_vehicles')) || [];
         trackingDB = JSON.parse(localStorage.getItem('agp_tracking')) || [];
+        sentBudgetsDB = JSON.parse(localStorage.getItem('agp_sentBudgets')) || [];
+        appointmentsDB = JSON.parse(localStorage.getItem('agp_appointments')) || [];
+        renderAllViews();
     }
 }
 
 async function guardarDatosNube() {
     localStorage.setItem('agp_vehicles', JSON.stringify(vehiclesDB));
     localStorage.setItem('agp_tracking', JSON.stringify(trackingDB));
+    localStorage.setItem('agp_sentBudgets', JSON.stringify(sentBudgetsDB));
+    localStorage.setItem('agp_appointments', JSON.stringify(appointmentsDB));
     try {
         await fetch(SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'save', vehicles: vehiclesDB, tracking: trackingDB })
+            body: JSON.stringify({ action: 'save', vehicles: vehiclesDB, tracking: trackingDB, sentBudgets: sentBudgetsDB, appointments: appointmentsDB })
         });
     } catch (error) {
         console.error("Error al guardar en la nube:", error);
@@ -67,6 +72,34 @@ function switchView(viewName) {
     } else if (viewName === 'budget') {
         document.getElementById('view-budget').classList.add('active-view');
         document.getElementById('menu-budget').classList.add('active');
+    } else if (viewName === 'sent-budgets') {
+        document.getElementById('view-sent-budgets').classList.add('active-view');
+        document.getElementById('menu-sent-budgets').classList.add('active');
+        renderSentBudgets();
+    } else if (viewName === 'received-orders') {
+        document.getElementById('view-received-orders').classList.add('active-view');
+        document.getElementById('menu-received-orders').classList.add('active');
+        renderReceivedOrders();
+    } else if (viewName === 'appointments') {
+        document.getElementById('view-appointments').classList.add('active-view');
+        document.getElementById('menu-appointments').classList.add('active');
+        renderAppointments();
+    } else if (viewName === 'delivered-jobs') {
+        document.getElementById('view-delivered-jobs').classList.add('active-view');
+        document.getElementById('menu-delivered-jobs').classList.add('active');
+        renderDeliveredJobs();
+    }
+}
+
+function renderAllViews() {
+    renderDashboard();
+    renderSentBudgets();
+    renderReceivedOrders();
+    renderAppointments();
+    renderDeliveredJobs();
+    if (document.getElementById('view-tracking').classList.contains('active-view')) {
+        cargarSelectoresSeguimiento();
+        renderAvancesList();
     }
 }
 
@@ -97,15 +130,15 @@ async function guardarNuevoVehiculo(e) {
     if (!plate || !model || !client) return;
 
     if(vehiclesDB.some(v => v.plate === plate)) {
-        alert("Ya existe un vehiculo registrado con esta chapa.");
+        alert("Ya existe un vehículo registrado con esta chapa.");
         return;
     }
 
     vehiclesDB.push({ plate, model, client, status });
     await guardarDatosNube();
     document.getElementById('vehicle-form').reset();
-    renderDashboard();
-    alert("Vehiculo registrado correctamente en la nube.");
+    renderAllViews();
+    alert("Vehículo registrado correctamente en la nube.");
 }
 
 function renderDashboard() {
@@ -116,11 +149,15 @@ function renderDashboard() {
 
     const baseUrl = "https://kevingonza048-dot.github.io/TallerApp/cliente.html";
 
-    vehiclesDB.forEach((v, idx) => {
+    // Solo mostramos en el panel principal los que NO están entregados
+    const activeVehicles = vehiclesDB.filter(v => v.status !== 'Entregado');
+
+    activeVehicles.forEach((v) => {
         if (v.status === 'Listo') readyCount++;
         else processCount++;
 
         const linkCliente = `${baseUrl}?chapa=${encodeURIComponent(v.plate)}`;
+        const originalIndex = vehiclesDB.findIndex(item => item.plate === v.plate);
 
         tbody.innerHTML += `
             <tr>
@@ -129,44 +166,226 @@ function renderDashboard() {
                 <td>${v.client}</td>
                 <td><span class="badge ${v.status === 'Listo' ? 'info' : 'warning'}">${v.status}</span></td>
                 <td>
-                    <div style="display: flex; gap: 6px; align-items: center;">
-                        <input type="text" readonly value="${linkCliente}" style="width: 180px; padding: 4px; background: #121212; border: 1px solid #444; color: #fff; font-size: 10px; border-radius: 4px;" id="table-link-${v.plate}">
+                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" readonly value="${linkCliente}" style="width: 150px; padding: 4px; background: #121212; border: 1px solid #444; color: #fff; font-size: 10px; border-radius: 4px;" id="table-link-${v.plate}">
                         <button onclick="copiarEnlaceTabla('${v.plate}')" style="background: #27ae60; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">Copiar</button>
-                        <button onclick="eliminarVehiculo(${idx})" style="background: #e74c3c; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">X</button>
+                        <button onclick="cambiarEstadoVehiculo(${originalIndex}, 'Entregado')" style="background: #8e44ad; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">Entregar</button>
+                        <button onclick="eliminarVehiculo(${originalIndex})" style="background: #e74c3c; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">X</button>
                     </div>
                 </td>
             </tr>`;
     });
 
-    if (document.getElementById('dash-total')) document.getElementById('dash-total').innerText = vehiclesDB.length;
+    if (document.getElementById('dash-total')) document.getElementById('dash-total').innerText = activeVehicles.length;
     if (document.getElementById('dash-process')) document.getElementById('dash-process').innerText = processCount;
     if (document.getElementById('dash-ready')) document.getElementById('dash-ready').innerText = readyCount;
+}
+
+async function cambiarEstadoVehiculo(index, nuevoEstado) {
+    vehiclesDB[index].status = nuevoEstado;
+    await guardarDatosNube();
+    renderAllViews();
 }
 
 function copiarEnlaceTabla(plate) {
     const input = document.getElementById(`table-link-${plate}`);
     input.select();
     navigator.clipboard.writeText(input.value);
-    alert("Enlace corto copiado. Al abrirlo el cliente vera sus fotos desde la nube.");
+    alert("Enlace copiado. Al abrirlo el cliente verá sus fotos desde la nube.");
 }
 
 async function eliminarVehiculo(index) {
-    if (confirm("Deseas eliminar este vehiculo?")) {
+    if (confirm("¿Deseas eliminar este vehículo?")) {
         vehiclesDB.splice(index, 1);
         await guardarDatosNube();
-        renderDashboard();
+        renderAllViews();
     }
+}
+
+// 📤 PRESUPUESTOS ENVIADOS
+function renderSentBudgets() {
+    const tbody = document.getElementById('sent-budgets-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (sentBudgetsDB.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #aaa;">No hay presupuestos enviados registrados.</td></tr>`;
+        return;
+    }
+    sentBudgetsDB.forEach((b, index) => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${b.date}</td>
+                <td><strong>${b.plate}</strong></td>
+                <td>${b.vehicle}</td>
+                <td>${b.client}</td>
+                <td>₲ ${Number(b.total).toLocaleString('es-PY')}</td>
+                <td>
+                    <button onclick="moverPresupuestoAOrden(${index})" style="background: #3498db; border: none; color: #fff; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">📥 Recibir Orden</button>
+                    <button onclick="eliminarPresupuestoEnviado(${index})" style="background: #e74c3c; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">X</button>
+                </td>
+            </tr>`;
+    });
+}
+
+async function moverPresupuestoAOrden(index) {
+    const b = sentBudgetsDB[index];
+    if (vehiclesDB.some(v => v.plate === b.plate)) {
+        alert("Este vehículo ya se encuentra registrado en el taller.");
+        switchView('home');
+        return;
+    }
+    vehiclesDB.push({
+        plate: b.plate,
+        model: b.vehicle,
+        client: b.client,
+        status: 'Ingreso'
+    });
+    sentBudgetsDB.splice(index, 1);
+    await guardarDatosNube();
+    renderAllViews();
+    alert("¡Presupuesto movido a Orden Recibida / Taller con éxito!");
+    switchView('home');
+}
+
+async function eliminarPresupuestoEnviado(index) {
+    if (confirm("¿Deseas eliminar este registro de presupuesto enviado?")) {
+        sentBudgetsDB.splice(index, 1);
+        await guardarDatosNube();
+        renderSentBudgets();
+    }
+}
+
+// 📥 ORDEN RECIBIDA
+function renderReceivedOrders() {
+    const tbody = document.getElementById('received-orders-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const received = vehiclesDB.filter(v => v.status !== 'Entregado');
+    if (received.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #aaa;">No hay órdenes recibidas activas.</td></tr>`;
+        return;
+    }
+    received.forEach((v) => {
+        const originalIndex = vehiclesDB.findIndex(item => item.plate === v.plate);
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${v.plate}</strong></td>
+                <td>${v.model}</td>
+                <td>${v.client}</td>
+                <td><span class="badge warning">${v.status}</span></td>
+                <td>
+                    <button onclick="switchView('tracking')" style="background: #27ae60; border: none; color: #fff; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">📸 Actualizar Avance</button>
+                </td>
+            </tr>`;
+    });
+}
+
+// 📅 AGENDAMIENTOS
+function renderAppointments() {
+    const tbody = document.getElementById('appointments-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (appointmentsDB.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #aaa;">No hay agendamientos registrados.</td></tr>`;
+        return;
+    }
+    appointmentsDB.forEach((app, index) => {
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${app.date}</strong></td>
+                <td>${app.plate}</td>
+                <td>${app.client}</td>
+                <td>${app.vehicle}</td>
+                <td>
+                    <button onclick="convertirAgendamientoATaller(${index})" style="background: #27ae60; border: none; color: #fff; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">📥 Ingresar al Taller</button>
+                    <button onclick="eliminarAgendamiento(${index})" style="background: #e74c3c; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">X</button>
+                </td>
+            </tr>`;
+    });
+}
+
+async function guardarAgendamiento(e) {
+    e.preventDefault();
+    const date = document.getElementById('app-date').value;
+    const plate = document.getElementById('app-plate').value.trim().toUpperCase();
+    const client = document.getElementById('app-client').value.trim();
+    const vehicle = document.getElementById('app-vehicle').value.trim();
+
+    if (!date || !plate || !client || !vehicle) return;
+
+    appointmentsDB.push({ date, plate, client, vehicle });
+    await guardarDatosNube();
+    document.getElementById('appointment-form').reset();
+    renderAppointments();
+    alert("Agendamiento guardado correctamente.");
+}
+
+async function convertirAgendamientoATaller(index) {
+    const app = appointmentsDB[index];
+    if (vehiclesDB.some(v => v.plate === app.plate)) {
+        alert("Este vehículo ya se encuentra registrado en el taller.");
+        appointmentsDB.splice(index, 1);
+        await guardarDatosNube();
+        renderAllViews();
+        switchView('home');
+        return;
+    }
+    vehiclesDB.push({
+        plate: app.plate,
+        model: app.vehicle,
+        client: app.client,
+        status: 'Ingreso'
+    });
+    appointmentsDB.splice(index, 1);
+    await guardarDatosNube();
+    renderAllViews();
+    alert("¡Vehículo ingresado al taller desde el agendamiento!");
+    switchView('home');
+}
+
+async function eliminarAgendamiento(index) {
+    if (confirm("¿Deseas eliminar este agendamiento?")) {
+        appointmentsDB.splice(index, 1);
+        await guardarDatosNube();
+        renderAppointments();
+    }
+}
+
+// ✅ TRABAJOS ENTREGADOS
+function renderDeliveredJobs() {
+    const tbody = document.getElementById('delivered-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const delivered = vehiclesDB.filter(v => v.status === 'Entregado');
+    if (delivered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #aaa;">No hay trabajos entregados registrados.</td></tr>`;
+        return;
+    }
+    delivered.forEach((v) => {
+        const originalIndex = vehiclesDB.findIndex(item => item.plate === v.plate);
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${v.plate}</strong></td>
+                <td>${v.model}</td>
+                <td>${v.client}</td>
+                <td><span class="badge info">Entregado</span></td>
+                <td>
+                    <button onclick="eliminarVehiculo(${originalIndex})" style="background: #e74c3c; border: none; color: #fff; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">Eliminar Historial</button>
+                </td>
+            </tr>`;
+    });
 }
 
 function cargarSelectoresSeguimiento() {
     const select = document.getElementById('t-plate-select');
     if (!select) return;
     select.innerHTML = '';
-    if (vehiclesDB.length === 0) {
-        select.innerHTML = '<option value="">No hay vehiculos registrados</option>';
+    const activeVehicles = vehiclesDB.filter(v => v.status !== 'Entregado');
+    if (activeVehicles.length === 0) {
+        select.innerHTML = '<option value="">No hay vehículos activos en taller</option>';
         return;
     }
-    vehiclesDB.forEach(v => {
+    activeVehicles.forEach(v => {
         select.innerHTML += `<option value="${v.plate}">${v.plate} - ${v.model} (${v.client})</option>`;
     });
 }
@@ -220,8 +439,7 @@ async function guardarRegistroSeguimiento(registro) {
     trackingDB.unshift(registro);
     await guardarDatosNube();
     document.getElementById('tracking-form').reset();
-    renderAvancesList();
-    renderDashboard();
+    renderAllViews();
     alert("Avance y foto guardados en la nube de Google.");
 }
 
@@ -230,7 +448,7 @@ function renderAvancesList() {
     if (!container) return;
     container.innerHTML = '';
     if (trackingDB.length === 0) {
-        container.innerHTML = '<p style="color: #aaa;">No hay avances fotograficos registrados aun.</p>';
+        container.innerHTML = '<p style="color: #aaa;">No hay avances fotográficos registrados aún.</p>';
         return;
     }
     trackingDB.forEach((item, index) => {
@@ -251,7 +469,7 @@ function renderAvancesList() {
 }
 
 async function eliminarAvance(index) {
-    if (confirm("Deseas eliminar este registro?")) {
+    if (confirm("¿Deseas eliminar este registro?")) {
         trackingDB.splice(index, 1);
         await guardarDatosNube();
         renderAvancesList();
@@ -260,11 +478,11 @@ async function eliminarAvance(index) {
 }
 
 function numberToWordsGuarani(amount) {
-    if (isNaN(amount) || amount <= 0) return "Cero Guaranies";
+    if (isNaN(amount) || amount <= 0) return "Cero Guaraníes";
     const units = ["", "un", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"];
-    const teens = ["diez", "once", "doce", "trece", "catorce", "quince", "dieciseis", "diecisiete", "dieciocho", "diecinueve"];
+    const teens = ["diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve"];
     const tens = ["", "diez", "veinte", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"];
-    const hundreds = ["", "ciento", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecentos"];
+    const hundreds = ["", "ciento", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecientos"];
 
     function convertGroup(n) {
         let output = "";
@@ -282,22 +500,27 @@ function numberToWordsGuarani(amount) {
     }
 
     let num = Math.floor(amount), result = "";
-    if (num >= 1000000) { let m = Math.floor(num / 1000000); result += (m === 1 ? "un millon " : convertGroup(m) + " millones "); num %= 1000000; }
+    if (num >= 1000000) { let m = Math.floor(num / 1000000); result += (m === 1 ? "un millón " : convertGroup(m) + " millones "); num %= 1000000; }
     if (num >= 1000) { let th = Math.floor(num / 1000); result += (th === 1 ? "mil " : convertGroup(th) + " mil "); num %= 1000; }
     if (num > 0) result += convertGroup(num);
-    return (result.trim() + " guaranies").toUpperCase();
+    return (result.trim() + " guaraníes").toUpperCase();
 }
 
 function generatePDF() {
     const client = document.getElementById('b-client').value;
     const vehicle = document.getElementById('b-vehicle').value;
-    const plate = document.getElementById('b-plate').value;
+    const plate = document.getElementById('b-plate').value.trim().toUpperCase();
     const insurance = document.getElementById('b-insurance').value;
     const claim = document.getElementById('b-claim').value;
     const detail = document.getElementById('b-detail').value;
     const observations = document.getElementById('b-observations').value;
     const parts = document.getElementById('b-parts').value;
     const total = document.getElementById('b-total').value;
+
+    if (!client || !vehicle || !plate || !total) {
+        alert("Por favor complete al menos el Asegurado, Vehículo, Placa y Monto Total.");
+        return;
+    }
 
     document.getElementById('pdf-client').innerText = client;
     document.getElementById('pdf-vehicle').innerText = vehicle;
@@ -313,14 +536,9 @@ function generatePDF() {
     document.getElementById('pdf-observations').innerText = observations;
     document.getElementById('pdf-parts').innerText = parts;
 
-    if (total) {
-        const totalNum = parseFloat(total);
-        document.getElementById('pdf-total').innerText = '₲ ' + totalNum.toLocaleString('es-PY');
-        document.getElementById('pdf-total-words').innerText = numberToWordsGuarani(totalNum);
-    } else {
-        document.getElementById('pdf-total').innerText = '₲ 0';
-        document.getElementById('pdf-total-words').innerText = 'CERO GUARANIES';
-    }
+    const totalNum = parseFloat(total);
+    document.getElementById('pdf-total').innerText = '₲ ' + totalNum.toLocaleString('es-PY');
+    document.getElementById('pdf-total-words').innerText = numberToWordsGuarani(totalNum);
 
     const partsTableBody = document.getElementById('pdf-parts-table-body');
     partsTableBody.innerHTML = '';
@@ -347,7 +565,21 @@ function generatePDF() {
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-    }).from(element).save().then(() => { element.style.display = 'none'; });
+    }).from(element).save().then(async () => {
+        element.style.display = 'none';
+        
+        // Registrar automáticamente en Presupuestos Enviados
+        sentBudgetsDB.unshift({
+            date: new Date().toLocaleDateString('es-PY'),
+            plate,
+            vehicle,
+            client,
+            total: totalNum
+        });
+        await guardarDatosNube();
+        renderSentBudgets();
+        alert("Presupuesto generado en PDF y registrado en la sección 'Presupuestos Enviados'.");
+    });
 }
 
 window.onload = () => {
