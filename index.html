@@ -67,6 +67,10 @@
                 <li><a href="#" id="menu-home" class="active" onclick="switchView('home')">📊 Panel Principal</a></li>
                 <li><a href="#" id="menu-tracking" onclick="switchView('tracking')">📸 Seguimiento y Enlaces</a></li>
                 <li><a href="#" id="menu-budget" onclick="switchView('budget')">📝 Presupuestos</a></li>
+                <li><a href="#" id="menu-sent-budgets" onclick="switchView('sent-budgets')">📤 Presupuestos Enviados</a></li>
+                <li><a href="#" id="menu-received-orders" onclick="switchView('received-orders')">📥 Orden Recibida</a></li>
+                <li><a href="#" id="menu-appointments" onclick="switchView('appointments')">📅 Agendamientos</a></li>
+                <li><a href="#" id="menu-delivered-jobs" onclick="switchView('delivered-jobs')">✅ Trabajos Entregados</a></li>
                 <li><a href="#" onclick="alert('Sección Inventario en desarrollo');">📦 Inventario</a></li>
             </ul>
         </aside>
@@ -140,7 +144,6 @@
                 </header>
 
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                    <!-- Formulario de actualización de estado y foto -->
                     <div style="flex: 1; min-width: 300px; background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333;">
                         <h3 style="color: #3498db; margin-bottom: 15px;">Actualizar Avance y Foto</h3>
                         <form id="tracking-form" onsubmit="actualizarAvanceFoto(event)">
@@ -169,7 +172,6 @@
                         </form>
                     </div>
 
-                    <!-- Lista de Avances Guardados -->
                     <div style="flex: 1.5; min-width: 320px;">
                         <h3 style="color: #27ae60; margin-bottom: 15px;">Historial de Avances en el Taller</h3>
                         <div id="tracking-list">
@@ -193,7 +195,6 @@
                     </div>
                     
                     <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                        <!-- Formulario de Presupuesto -->
                         <form id="budget-form" style="flex: 1; min-width: 320px; background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333;">
                             <h3 style="color: #3498db; margin-bottom: 15px;">Datos del Asegurado y Trabajo</h3>
                             
@@ -204,7 +205,6 @@
                             <input type="text" id="b-insurance" placeholder="Seguro" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
                             <input type="text" id="b-claim" placeholder="Nº de Siniestro" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
 
-                            <!-- Selección rápida de piezas -->
                             <label style="color: #3498db; font-size: 13px; font-weight: bold; display: block; margin-bottom: 6px;">Selección de Piezas a Trabajar (Ch: Chapear | P: Pintar | E: Encuadre):</label>
                             <div class="parts-grid" id="parts-selector"></div>
 
@@ -215,14 +215,12 @@
                             <input type="number" id="b-total" placeholder="Monto Total (₲)" required style="width: 100%; padding: 10px; margin-bottom: 15px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
 
                             <button type="button" onclick="generatePDF()" style="width: 100%; background: #27ae60; color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px;">
-                                📄 Descargar Presupuesto en PDF
+                                📄 Descargar Presupuesto en PDF y Registrar
                             </button>
                         </form>
 
                         <!-- Documento Imprimible Estilo Nota de Presupuesto A.G.P. -->
                         <div id="pdf-template" style="display: none; width: 700px; padding: 25px; background-color: #ffffff !important; color: #000000 !important; font-family: 'Arial', sans-serif; font-size: 11px; border: 1px solid #000;">
-                            
-                            <!-- Encabezado Oficial -->
                             <table style="width: 100%; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; background-color: #ffffff !important; color: #000000 !important;">
                                 <tr>
                                     <td style="width: 60%; vertical-align: top; background-color: #ffffff !important; color: #000000 !important;">
@@ -240,7 +238,6 @@
                                 </tr>
                             </table>
 
-                            <!-- Datos Asegurado -->
                             <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #000; background-color: #ffffff !important; color: #000000 !important;">
                                 <tr>
                                     <td style="padding: 4px; border: 1px solid #000; width: 50%; color: #000000 !important; background-color: #ffffff !important;"><strong>Asegurado:</strong> <span id="pdf-client"></span></td>
@@ -256,7 +253,6 @@
                                 </tr>
                             </table>
 
-                            <!-- Tabla de Piezas -->
                             <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #000000; background-color: #ffffff !important;">
                                 <thead>
                                     <tr style="background-color: #f2f2f2 !important; font-size: 10px; color: #000000 !important;">
@@ -273,7 +269,6 @@
                                 <strong>Detalles Adicionales:</strong> <span id="pdf-detail"></span>
                             </div>
 
-                            <!-- Observaciones -->
                             <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #000000; background-color: #ffffff !important;">
                                 <tr>
                                     <td style="border: 1px solid #000000; padding: 4px; font-weight: bold; font-size: 9px; color: #000000 !important; background-color: #f2f2f2 !important;">OBSERVACIONES:</td>
@@ -283,7 +278,6 @@
                                 </tr>
                             </table>
 
-                            <!-- Repuestos -->
                             <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #000000; background-color: #ffffff !important;">
                                 <tr>
                                     <td style="border: 1px solid #000000; padding: 4px; font-weight: bold; font-size: 9px; color: #000000 !important; background-color: #f2f2f2 !important;">REPUESTOS SOLICITADOS:</td>
@@ -293,7 +287,6 @@
                                 </tr>
                             </table>
 
-                            <!-- Total -->
                             <div style="border: 1px solid #000; padding: 8px; margin-bottom: 25px; background-color: #ffffff !important; color: #000000 !important;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                                     <span style="font-size: 12px; font-weight: bold;">Son Guaraníes:</span>
@@ -307,7 +300,6 @@
                                 </div>
                             </div>
 
-                            <!-- Firma -->
                             <table style="width: 100%; margin-top: 20px; background-color: #ffffff !important; color: #000000 !important;">
                                 <tr>
                                     <td style="width: 50%; text-align: center; vertical-align: bottom; background-color: #ffffff !important; color: #000000 !important;">
@@ -318,10 +310,112 @@
                                     </td>
                                 </tr>
                             </table>
-
                         </div>
                     </div>
                 </section>
+            </div>
+
+            <!-- VISTA 4: PRESUPUESTOS ENVIADOS -->
+            <div id="view-sent-budgets" class="view-section">
+                <header>
+                    <h1>📤 Presupuestos Enviados</h1>
+                    <p>Listado de presupuestos generados y enviados a los clientes o aseguradoras</p>
+                </header>
+                <div style="background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Placa / Chapa</th>
+                                <th>Vehículo</th>
+                                <th>Asegurado</th>
+                                <th>Total (₲)</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sent-budgets-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VISTA 5: ORDEN RECIBIDA -->
+            <div id="view-received-orders" class="view-section">
+                <header>
+                    <h1>📥 Orden Recibida</h1>
+                    <p>Vehículos con orden de trabajo confirmada listos para iniciar o en taller</p>
+                </header>
+                <div style="background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Placa / Chapa</th>
+                                <th>Vehículo</th>
+                                <th>Asegurado</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="received-orders-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VISTA 6: AGENDAMIENTOS -->
+            <div id="view-appointments" class="view-section">
+                <header>
+                    <h1>📅 Agendamientos</h1>
+                    <p>Gestión de fechas programadas para ingreso de vehículos al taller</p>
+                </header>
+                <div style="background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #333;">
+                    <h3 style="margin-bottom: 15px; color: #3498db;">➕ Nuevo Agendamiento</h3>
+                    <form id="appointment-form" onsubmit="guardarAgendamiento(event)" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <input type="date" id="app-date" required style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
+                        <input type="text" id="app-plate" placeholder="Placa / Chapa" required style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px; text-transform: uppercase;">
+                        <input type="text" id="app-client" placeholder="Propietario / Asegurado" required style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
+                        <input type="text" id="app-vehicle" placeholder="Vehículo / Modelo" required style="flex: 1; padding: 10px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 6px;">
+                        <button type="submit" style="background: #3498db; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Agendar</button>
+                    </form>
+                </div>
+                <div style="background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha Programada</th>
+                                <th>Placa / Chapa</th>
+                                <th>Propietario</th>
+                                <th>Vehículo</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appointments-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VISTA 7: TRABAJOS ENTREGADOS -->
+            <div id="view-delivered-jobs" class="view-section">
+                <header>
+                    <h1>✅ Trabajos Entregados</h1>
+                    <p>Historial de vehículos finalizados y entregados con éxito a los clientes</p>
+                </header>
+                <div style="background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Placa / Chapa</th>
+                                <th>Vehículo</th>
+                                <th>Asegurado</th>
+                                <th>Estado Final</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="delivered-table-body">
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </main>
